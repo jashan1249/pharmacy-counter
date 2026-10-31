@@ -1,0 +1,1176 @@
+<title>Pharmacy Counter Beta</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&display=swap">
+<style id="pagesize">@page{size:A5 portrait;margin:7mm}</style>
+<style>
+/* Layout: fixed left menu with big buttons, work area on the right; menu becomes a top strip on phones */
+:root{
+  --bg:#eef3f1; --surface:#ffffff; --fg:#14201c; --muted:#5a6b65; --line:#d5dfdb;
+  --accent:#0a7a5c; --accent-fg:#ffffff; --accent-soft:#dff1ea;
+  --warn:#9a5b00; --warn-soft:#fdf0d9; --bad:#b8322a; --bad-soft:#fbe4e2;
+  --font:"Hind",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101715; --surface:#18221f; --fg:#e3ece8; --muted:#94a59f; --line:#2c3a35;
+  --accent:#3fc29c; --accent-fg:#06140f; --accent-soft:#163329;
+  --warn:#f0b357; --warn-soft:#35280f; --bad:#f08279; --bad-soft:#3a1a18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101715; --surface:#18221f; --fg:#e3ece8; --muted:#94a59f; --line:#2c3a35;
+  --accent:#3fc29c; --accent-fg:#06140f; --accent-soft:#163329;
+  --warn:#f0b357; --warn-soft:#35280f; --bad:#f08279; --bad-soft:#3a1a18; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45}
+#app{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:100vh}
+.nav{background:var(--surface);border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;padding-left:max(10px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;font-size:17px;padding:4px 10px 14px;display:flex;gap:8px;align-items:center}
+.beta{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:0 5px;margin-top:2px}
+.mbeta{display:none}
+@media (max-width:820px){.mbeta{display:flex;justify-content:center;gap:6px;align-items:center;font-size:12px;padding:6px;background:var(--warn-soft);color:var(--fg)}}
+.brand i{width:26px;height:26px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:var(--accent-fg);font-style:normal;font-size:18px;line-height:1}
+.nav>button{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--fg);font:inherit;font-size:15px;font-weight:500;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left}
+.nav>button:hover{background:var(--bg)}
+.nav>button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.themebtn{margin-top:auto}
+.nav kbd{margin-left:auto;font:11px var(--font);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.bk{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:grid;gap:6px}
+.bk.ok{background:var(--accent-soft)} .bk.warn{background:var(--warn-soft)}
+.bk b{font-weight:600}
+main{padding-block:22px 60px;padding-left:max(16px,2.2vw);padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0;max-width:1300px;width:100%}
+@media (max-width:820px){
+  #app{grid-template-columns:minmax(0,1fr)}
+  .nav{flex-direction:row;height:auto;position:sticky;top:0;z-index:5;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-left,0px));gap:2px}
+  .brand,.bk,.nav kbd{display:none}
+  .nav>button{flex-direction:column;gap:2px;font-size:12px;padding:6px 10px;white-space:nowrap}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px))}
+}
+h1{font-size:26px;margin:0;font-weight:700;text-wrap:balance}
+h2{font-size:21px;margin:0 0 4px;font-weight:700}
+h3{font-size:16px;margin:0 0 10px;font-weight:600}
+.muted{color:var(--muted)}
+.note{color:var(--muted);font-size:13px;margin:0}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.head p{margin:2px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.stack{display:grid;gap:14px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.form .wide{grid-column:span 2}
+@media (max-width:500px){.form .wide{grid-column:auto}}
+label{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+input,select{font:inherit;font-size:15px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 10px;width:100%;min-width:0}
+input[type=number]{text-align:right}
+input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font:inherit;font-size:15px;font-weight:600;border-radius:8px;padding:9px 16px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg);white-space:nowrap;text-decoration:none;display:inline-block;text-align:center}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.big{font-size:16px;padding:12px 20px}
+.btn.sm{font-size:13px;padding:5px 10px}
+.btn.danger{color:var(--bad)}
+.btn[data-armed]{background:var(--bad);color:#fff;border-color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--surface);color:var(--fg);font:inherit;font-weight:600;padding:8px 14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:left;font:inherit;color:var(--fg);cursor:pointer}
+.tile:hover{border-color:var(--accent)}
+.tile .k{font-size:13px;color:var(--muted);font-weight:500}
+.tile .v{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile .s{font-size:13px;color:var(--muted)}
+.tile.warn .v{color:var(--warn)} .tile.bad .v{color:var(--bad)}
+.tw{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+.t th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.t td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t tr.cancel td{color:var(--muted);text-decoration:line-through}
+.t tfoot td{font-weight:700;border-bottom:0}
+.t input,.t select{padding:6px 7px;font-size:14px}
+.sub{font-size:12px;color:var(--muted)}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.banner{background:var(--warn-soft);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.banner.info{background:var(--accent-soft)}
+.search input{font-size:17px;padding:12px 14px;border-width:2px}
+.results{display:grid;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;overflow:hidden}
+.res{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;border:0;border-top:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.res.hi,.res:hover{background:var(--accent-soft)}
+.res.cat{background:var(--bg)}
+.reshead{padding:6px 14px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);background:var(--bg)}
+.res b{font-weight:600}
+.res .rt{text-align:right;white-space:nowrap;font-size:13px}
+.empty{padding:26px;text-align:center;color:var(--muted)}
+.billgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+@media (max-width:1050px){.billgrid{grid-template-columns:minmax(0,1fr)}}
+.totals{display:grid;gap:8px;position:sticky;top:14px}
+.tl{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.tl.big{font-size:24px;font-weight:700;border-top:1px solid var(--line);padding-top:8px}
+.tl input{width:110px}
+.warnrow td{background:var(--bad-soft)}
+.x{border:0;background:none;color:var(--bad);font-size:20px;cursor:pointer;padding:0 6px;line-height:1}
+.unit{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;cursor:pointer;margin-top:3px}
+.unit.on{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.keys{font-size:12px;color:var(--muted)}
+.keys kbd{font:11px var(--font);border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--surface)}
+@media (max-width:640px){
+  #cart thead{display:none}
+  #cart tbody tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+  #cart tbody tr.warnrow{background:var(--bad-soft)}
+  #cart td{border:0;padding:0;min-width:0}
+  #cart td.nm{grid-column:1/-1}
+  #cart td[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--muted)}
+  #cart input,#cart select{width:100%!important;min-width:0!important}
+  #cart td:first-child{min-width:0}
+}
+#cart select{min-width:130px}
+#cart td:first-child{min-width:170px}
+.nmrow{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
+#modal{position:fixed;inset:0;background:rgba(10,20,16,.5);z-index:20;display:grid;place-items:start center;overflow:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px))}
+.mbox{background:var(--surface);color:var(--fg);border-radius:12px;padding:20px;width:100%;max-width:640px;position:relative;display:grid;gap:14px}
+.mbox.wide{max-width:900px}
+.mclose{position:absolute;top:8px;right:10px;border:0;background:none;font-size:26px;color:var(--muted);cursor:pointer}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--surface);padding:10px 18px;border-radius:8px;font-weight:500;z-index:30;max-width:calc(100% - 32px)}
+.paper{background:#fff;padding:14px;border-radius:6px;overflow-x:auto}
+
+/* ---------- Printed invoice (A4/A5): always black on white ---------- */
+.inv{color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:11px;border:1px solid #000;min-width:560px}
+.inv .ih{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid #000}
+.inv .shop{font-size:18px;font-weight:700}
+.inv .ttl{text-align:right;font-weight:700;font-size:15px;white-space:nowrap}
+.inv .ttl small{display:block;font-size:10px;font-weight:400}
+.inv .im{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;line-height:1.55}
+.inv .im .r{text-align:right;white-space:nowrap}
+.inv table{width:100%;border-collapse:collapse;font-size:inherit}
+.inv .it th{border-top:1px solid #000;border-bottom:1px solid #000;padding:4px 3px;text-align:right;font-size:10px}
+.inv .it td{padding:2px 3px;text-align:right;white-space:nowrap}
+.inv .it th+th,.inv .it td+td{border-left:1px solid #000}
+.inv .it .l{text-align:left;white-space:normal}
+.inv .it tr.fill td{height:var(--fh,60px)}
+.inv .iw{border-top:1px solid #000;padding:5px 10px;font-weight:700}
+.inv .if{display:flex;justify-content:space-between;gap:12px;padding:4px 10px 6px;border-top:1px solid #000}
+.inv .gt td,.inv .gt th{padding:1px 6px;text-align:right;font-size:10px}
+.inv .gt th{border-bottom:1px solid #000}
+.inv .tot{display:grid;grid-template-columns:auto auto;column-gap:14px;line-height:1.6}
+.inv .tot span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.inv .tot .g{font-weight:700;font-size:14px}
+.inv .is{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;padding:16px 10px 8px;border-top:1px solid #000;font-size:10px}
+/* ---------- Thermal receipt ---------- */
+.rc{color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:11px;width:72mm;padding:2mm;line-height:1.35}
+.rc.w58{width:50mm;font-size:10px}
+.rc .c{text-align:center}
+.rc .sh{font-size:14px;font-weight:700}
+.rc hr{border:0;border-top:1px dashed #000;margin:4px 0}
+.rc .ln{display:flex;justify-content:space-between;gap:6px}
+.rc .ln span:last-child{text-align:right;white-space:nowrap}
+.rc .g{font-size:14px;font-weight:700}
+.rc .s{font-size:9.5px}
+#printArea{display:none}
+body.large{zoom:1.15}
+.check{display:grid;gap:8px}
+.ck{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+.ck i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;border:2px solid var(--line);flex:none}
+.ck.done i{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.ck.done span{color:var(--muted);text-decoration:line-through}
+.ck .btn{margin-left:auto}
+.change{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--accent-soft);border-radius:8px;padding:8px 10px;font-weight:600}
+.custinfo{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px}
+.mbar{display:none}
+@media (max-width:1050px){.mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));justify-content:space-between;align-items:center;gap:10px}
+ .mbar b{font-size:22px}}
+.welcome{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.welcome button{text-align:left;padding:16px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;cursor:pointer;display:grid;gap:4px}
+.welcome button:hover{border-color:var(--accent)}
+.welcome b{font-size:17px}
+@media print{
+  body{background:#fff}
+  #app,#modal,#toast{display:none!important}
+  #printArea{display:block}
+  .inv{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="mbeta"><span class="beta">BETA TEST</span> Pharmacy Counter is in testing. Keep a backup of your records.</div>
+<div id="app">
+  <nav class="nav" id="nav"></nav>
+  <main id="main"><div class="empty">Opening your records…</div></main>
+</div>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+<div id="printArea"></div>
+<datalist id="catlist"></datalist>
+<script id="catalog" type="text/plain">__CATALOG__</script>
+
+<script>
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const r2=n=>Math.round((+n||0)*100)/100;
+const r4=n=>Math.round((+n||0)*10000)/10000;
+const n2=n=>r2(n).toFixed(2);
+const money=n=>(r2(n)<0?'−':'')+'₹'+Math.abs(r2(n)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(4,'0');
+function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function daysAgo(n){const d=new Date(Date.now()-n*864e5);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function monthAdd(n){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+const dmy=s=>s?s.split('-').reverse().join('-'):'';
+const expF=s=>s?s.slice(5,7)+'/'+s.slice(2,4):'';
+const billingOnly=()=>S&&S.settings.stock==='billing';
+const isExpired=e=>e&&e<monthAdd(0);
+const isSoon=e=>e&&!isExpired(e)&&e<=monthAdd(3);
+const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const timeAgo=iso=>{if(!iso)return'never';const m=Math.round((Date.now()-Date.parse(iso))/6e4);if(m<1)return'just now';if(m<60)return m+' min ago';const h=Math.round(m/60);if(h<24)return h+' hours ago';const d=Math.round(h/24);return d===1?'yesterday':d+' days ago'};
+function guessUnits(pack){const m=/^\s*(\d+)\s*(tab|tabs|tablet|tablets|cap|caps|capsule|capsules)\b/i.exec(pack||'');return m?+m[1]:1}
+function unitWord(m){const w=/\b(tab|tablet|cap|capsule)/i.exec((m&&m.pack)||'');return w?(w[1].toLowerCase().startsWith('cap')?'cap':'tab'):'unit'}
+const packs=it=>it.loose?(+it.qty||0)/(+it.units||((S&&S.meds.find(m=>m.id===it.medId))||{}).units||1):(+it.qty||0);
+const qtyLabel=it=>it.loose?`${it.qty} ${it.unitName||'tab'}`:String(it.qty);
+
+/* ================= storage: IndexedDB with daily snapshots ================= */
+const LEGACY_KEY='pharmacy_counter_v1';
+let idb=null,S=null,lastBackup=null,dirHandle=null,backupState='none';
+function idbOpen(){return new Promise((res,rej)=>{try{const r=indexedDB.open('pharmacy_counter',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
+function idbReq(mode,fn){return new Promise((res,rej)=>{const tx=idb.transaction('kv',mode),r=fn(tx.objectStore('kv'));let out;if(r)r.onsuccess=()=>out=r.result;tx.oncomplete=()=>res(out);tx.onerror=tx.onabort=()=>rej(tx.error)})}
+const idbGet=k=>idbReq('readonly',s=>s.get(k));
+const idbSet=(k,v)=>idbReq('readwrite',s=>s.put(v,k));
+const idbDel=k=>idbReq('readwrite',s=>s.delete(k));
+const idbKeys=()=>idbReq('readonly',s=>s.getAllKeys());
+let chain=Promise.resolve(),bkT;
+function save(){
+  S.updated=Date.now();
+  chain=chain.then(()=>idb?idbSet('state',S):localStorage.setItem(LEGACY_KEY,JSON.stringify(S)))
+    .catch(e=>{console.error(e);toast('Could not save. Download a backup from Settings now.')});
+  clearTimeout(bkT);bkT=setTimeout(autoBackup,3000);
+}
+async function snapshotToday(){
+  if(!idb)return;const keys=(await idbKeys()).map(String),k='snap-'+today();
+  if(!keys.includes(k))await idbSet(k,S);
+  const snaps=keys.concat(k).filter(x=>x.startsWith('snap-')).sort();
+  for(const old of [...new Set(snaps)].slice(0,-7))await idbDel(old);
+}
+async function markBackup(){lastBackup=new Date().toISOString();if(idb)try{await idbSet('lastBackup',lastBackup)}catch(e){}drawNav()}
+async function writeBackupFile(){const fh=await dirHandle.getFileHandle(`pharmacy-backup-${today()}.json`,{create:true});const w=await fh.createWritable();await w.write(JSON.stringify(S));await w.close();await markBackup()}
+async function autoBackup(){
+  if(!dirHandle)return;
+  try{const p=await dirHandle.queryPermission({mode:'readwrite'});if(p!=='granted'){backupState='paused';drawNav();return}
+    await writeBackupFile();backupState='on'}catch(e){backupState='paused'}
+  drawNav();
+}
+function logEv(text){S.log=S.log||[];S.log.push({t:new Date().toISOString(),text});if(S.log.length>500)S.log.splice(0,S.log.length-500)}
+
+function blankState(){return{v:2,settings:{shop:'My Medical Store',addr:'Main Bazar, Mansa, Punjab',phone:'98XXXXXXXX',gstin:'',dl:'',gstType:'regular',prefix:'INV-',nextNo:1,cnNo:1,
+  footer:'Get well soon. Medicines once sold are taken back only with the bill within 7 days.',title:'auto',paper:'A5'},
+  meds:[],batches:[],parties:[],sales:[],returns:[],purchases:[],payments:[],log:[],sample:false}}
+function migrate(){
+  const st=S.settings;st.gstType=st.gstType||'regular';st.stock=st.stock||'track';st.cnNo=st.cnNo||1;
+  S.returns=S.returns||[];S.log=S.log||[];
+  S.meds.forEach(m=>{if(m.units==null)m.units=guessUnits(m.pack);m.salt=m.salt||'';m.barcode=m.barcode||'';m.sched=m.sched||''});
+  S.sales.forEach(s=>s.items.forEach(i=>{if(i.sched==null){const m=S.meds.find(x=>x.id===i.medId);i.sched=m?m.sched:''}}));
+  S.v=2;
+}
+
+const med=id=>S.meds.find(m=>m.id===id);
+const bat=id=>S.batches.find(b=>b.id===id);
+const party=id=>S.parties.find(p=>p.id===id);
+const stockOf=id=>r4(S.batches.filter(b=>b.medId===id).reduce((a,b)=>a+(+b.qty||0),0));
+function fmtStock(q,m){q=r4(q);if(!m||m.units<=1||Number.isInteger(q))return String(q);const f=Math.floor(q),l=Math.round((q-f)*m.units);return l?`${f} + ${l} ${unitWord(m)}`:String(f)}
+function nearestExp(id){const e=S.batches.filter(b=>b.medId===id&&b.qty>0).map(b=>b.exp).sort();return e[0]||''}
+
+function lineAmt(it){return(+it.qty||0)*(+it.rate||0)*(1-(+it.disc||0)/100)}
+function saleTotals(items,disc){
+  const sub=items.reduce((a,i)=>a+lineAmt(i),0);disc=Math.min(Math.max(+disc||0,0),sub);
+  const raw=sub-disc,total=Math.round(raw),f=sub?raw/sub:1,g={};
+  items.forEach(i=>{const amt=lineAmt(i)*f,tx=amt/(1+(+i.gst||0)/100),k=+i.gst||0;g[k]=g[k]||{tx:0,tax:0};g[k].tx+=tx;g[k].tax+=amt-tx});
+  return{sub,disc,raw,total,ro:total-raw,gst:g};
+}
+function purLine(r){const base=(+r.qty||0)*(+r.pur||0)*(1-(+r.disc||0)/100);return{base,tax:base*(+r.gst||0)/100}}
+const saleFactor=s=>s.sub?(s.sub-s.disc)/s.sub:1;
+const returnedQty=(s,idx)=>S.returns.filter(r=>r.saleId===s.id).reduce((a,r)=>a+r.items.filter(i=>i.idx===idx).reduce((x,i)=>x+i.qty,0),0);
+function balance(p){
+  let b=+p.opening||0;
+  if(p.type==='customer'){S.sales.filter(s=>s.partyId===p.id&&!s.cancelled).forEach(s=>b+=s.total-(+s.paid||0));
+    S.returns.filter(r=>r.partyId===p.id&&r.mode==='credit').forEach(r=>b-=r.total)}
+  else S.purchases.filter(x=>x.partyId===p.id).forEach(x=>b+=x.total-(+x.paid||0));
+  S.payments.filter(x=>x.partyId===p.id).forEach(x=>b-=+x.amount||0);
+  return r2(b);
+}
+function words(num){
+  const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"],
+        b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+  const two=n=>n<20?a[n]:b[Math.floor(n/10)]+(n%10?" "+a[n%10]:"");
+  const three=n=>(n>=100?a[Math.floor(n/100)]+" Hundred"+(n%100?" and ":""):"")+(n%100?two(n%100):"");
+  let n=Math.floor(Math.abs(num)),out=[];if(n===0)out.push("Zero");
+  const cr=Math.floor(n/1e7);n%=1e7;const lk=Math.floor(n/1e5);n%=1e5;const th=Math.floor(n/1e3);n%=1e3;
+  if(cr)out.push(three(cr)+" Crore");if(lk)out.push(two(lk)+" Lakh");if(th)out.push(two(th)+" Thousand");if(n)out.push(three(n));
+  return"Rs. "+out.join(" ")+" only";
+}
+function expiryList(){return S.batches.filter(b=>b.qty>0&&b.exp&&b.exp<=monthAdd(3)).sort((x,y)=>x.exp.localeCompare(y.exp))}
+function lowStock(){return S.meds.filter(m=>{const s=stockOf(m.id);return s<=0||(+m.min&&s<=+m.min)})}
+function maxBillNo(prefix){return S.sales.filter(s=>s.no.startsWith(prefix)).reduce((a,s)=>Math.max(a,parseInt(s.no.slice(prefix.length))||0),0)}
+const phone91=p=>{const d=String(p||'').replace(/\D/g,'');return d.length===10?'91'+d:d.length>=11?d:''};
+const gstOn=()=>S.settings.gstType==='regular';
+
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4800)}
+function modal(html,wide){$('#modal').innerHTML=`<div class="mbox ${wide?'wide':''}" role="dialog" aria-modal="true"><button class="mclose" data-act="close" aria-label="Close">×</button>${html}</div>`;$('#modal').hidden=false;const f=$('#modal input')||$('#modal .mbox [data-act]:not(.mclose)');if(f)f.focus()}
+function closeModal(){$('#modal').hidden=true;$('#modal').innerHTML=''}
+function armed(btn){if(btn.dataset.armed)return true;btn.dataset.armed=1;btn.dataset.orig=btn.textContent;btn.textContent='Click again to confirm';
+  setTimeout(()=>{if(btn.isConnected&&btn.dataset.armed){delete btn.dataset.armed;btn.textContent=btn.dataset.orig}},3500);return false}
+
+/* ================= saving files (works inside the shared link too) ================= */
+const inFrame=window.self!==window.top;
+async function saveFile(filename,data,mime){
+  if(inFrame){try{const d=await window.claude?.use?.('downloads');if(!d){toast('Saving files is not available in this view. Download the app file to use this.');return false}
+      await d.save({filename,data});return true}catch(e){if(e&&e.code!=='declined')toast('Could not save the file here.');return false}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:mime||'application/octet-stream'}));a.download=filename;document.body.appendChild(a);a.click();a.remove();return true}
+function printableDoc(html){const css=[...document.querySelectorAll('style')].map(x=>x.textContent).join('\n');
+  return`<!doctype html><html><head><meta charset="utf-8"><title>Bill</title><style>${css}</style><style>#printArea{display:block}body{background:#fff;margin:0}.inv{min-width:0}</style></head><body><div id="printArea">${html}</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`}
+
+/* ================= theme ================= */
+function applyTheme(){const t=S&&S.settings.theme;if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
+const THEME_LABEL={auto:'Auto (follow phone/PC)',light:'Day',dark:'Night'};
+/* ================= medicine database (Indian Medicine Dataset, MIT) ================= */
+let CAT=null,catNorm=null,catSaltNorm=null,catLoading=null;
+function loadCatalog(){if(catLoading)return catLoading;catLoading=(async()=>{try{const el=$('#catalog');const b64=el?el.textContent.trim():'';if(b64.length<100||!window.DecompressionStream)return null;
+  const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  const txt=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  CAT=JSON.parse(txt);catNorm=CAT.r.map(r=>norm(r[0]));catSaltNorm=CAT.c.map(c=>norm(c));if(view==='bill'&&$('#medsearch')&&$('#medsearch').value)drawResults();return CAT}catch(e){console.error(e);return null}})();return catLoading}
+const catItem=r=>({name:r[0],company:CAT.m[r[1]]||'',pack:r[2],units:r[3]||1,salt:CAT.c[r[4]]||'',mrp:r[5]||0});
+function catSearch(q,limit=8,skip=new Set()){if(!CAT)return[];const nq=norm(q);if(nq.length<2)return[];const a=[],b=[],c=[];
+  for(let i=0;i<catNorm.length&&a.length<limit;i++){const n=catNorm[i];if(skip.has(n))continue;if(n.startsWith(nq))a.push(i);else if(b.length<limit&&n.includes(nq))b.push(i)}
+  if(a.length+b.length<limit&&nq.length>=4){const salts=new Set();catSaltNorm.forEach((s,i)=>{if(s.includes(nq))salts.add(i)});for(let i=0;i<CAT.r.length&&c.length<limit;i++)if(salts.has(CAT.r[i][4])&&!skip.has(catNorm[i]))c.push(i)}
+  return[...a,...b,...c].slice(0,limit).map(i=>catItem(CAT.r[i]))}
+function catFind(name){if(!CAT)return null;const n=norm(name),i=catNorm.indexOf(n);return i<0?null:catItem(CAT.r[i])}
+function fillNameList(q){const dl=$('#catlist');if(!dl)return;const nq=norm(q);if(nq.length<2){dl.innerHTML='';return}
+  const own=S.meds.filter(m=>norm(m.name).includes(nq)).slice(0,8).map(m=>m.name),skip=new Set(own.map(norm));
+  dl.innerHTML=[...own,...catSearch(q,12,skip).map(c=>c.name)].map(n=>`<option value="${esc(n)}">`).join('')}
+
+/* ================= sample data ================= */
+function seed(){
+  S=blankState();S.sample=true;
+  const M=(name,company,pack,salt,hsn,gst,mrp,min,sched='')=>{const m={id:uid(),name,company,pack,units:guessUnits(pack),salt,barcode:'',hsn,gst,mrp,min,sched};S.meds.push(m);return m};
+  const B=(m,batch,exp,qty,pur,sale)=>S.batches.push({id:uid(),medId:m.id,batch,exp,qty,mrp:m.mrp,pur,sale:sale||m.mrp});
+  const dolo=M('DOLO 650 TAB','Micro Labs','15 TAB','Paracetamol 650mg','3004',5,30.9,30);B(dolo,'DOBS4521',monthAdd(16),140,20.4);B(dolo,'DOBS3310',monthAdd(2),15,20.1);
+  const calpol=M('CALPOL 650 TAB','GSK','15 TAB','Paracetamol 650mg','3004',5,29.5,20);B(calpol,'CP7781',monthAdd(19),50,19.6);
+  M('CROCIN 650 TAB','Haleon','15 TAB','Paracetamol 650mg','3004',5,31.3,10);
+  const pan=M('PAN 40 TAB','Alkem','15 TAB','Pantoprazole 40mg','3004',5,183,10,'H');B(pan,'PN2408',monthAdd(20),36,118);
+  const azi=M('AZITHRAL 500 TAB','Alembic','5 TAB','Azithromycin 500mg','3004',5,110,10,'H');B(azi,'AZ1907',monthAdd(9),6,73);
+  const tax=M('TAXIM-O 200 TAB','Alkem','10 TAB','Cefixime 200mg','3004',5,119,5,'H1');B(tax,'TX5521',monthAdd(14),12,78);
+  const ors=M('ELECTRAL ORS POWDER','FDC','21.8 G','Oral rehydration salts','3004',5,20.3,20);B(ors,'EL0925',monthAdd(-1),10,13);B(ors,'EL1126',monthAdd(13),60,13.4);
+  const syr=M('NIHAL SYRINGE 3ML','Nihal','100 PCS','','9018',5,232,2);B(syr,'NS3M11',monthAdd(30),8,139,180);
+  const ndl=M('DISPOVAN 26G NEEDLE','BD','100 PCS','','9018',5,246,2);B(ndl,'BD2611',monthAdd(28),5,56,80);
+  const glu=M('GLUCO-ONE BG-03 50 STRIPS','Dr Morepen','50 STRIPS','','3822',5,789,3);B(glu,'GO0324',monthAdd(11),4,390,700);
+  const vol=M('VOLINI GEL','Sun Pharma','30 G','Diclofenac gel','3004',5,134,5);B(vol,'VG8812',monthAdd(15),12,91);
+  const svm={id:uid(),type:'customer',name:'SVM PHARMA',phone:'',addr:'Mansa',gstin:'',opening:1965};
+  const ram={id:uid(),type:'customer',name:'Ramesh Kumar',phone:'98140XXXXX',addr:'Ward 4, Mansa',gstin:'',opening:0};
+  const sup={id:uid(),type:'supplier',name:'City Medical Agencies',phone:'01652-XXXXXX',addr:'Bathinda',gstin:'',opening:4500};
+  S.parties.push(svm,ram,sup);
+  const mk=(p,type,lines,date)=>{const items=lines.map(([m,q])=>{const b=S.batches.find(x=>x.medId===m.id&&x.qty>=q&&!isExpired(x.exp));b.qty-=q;
+      return{medId:m.id,batchId:b.id,name:m.name,pack:m.pack,hsn:m.hsn,sched:m.sched,batch:b.batch,exp:b.exp,qty:q,loose:false,units:m.units,unitName:unitWord(m),mrp:b.mrp,rate:b.sale,disc:0,gst:m.gst,pur:b.pur}});
+    const t=saleTotals(items,0),prev=p?balance(p):0;
+    S.sales.push({id:uid(),no:S.settings.prefix+pad(S.settings.nextNo++),date,partyId:p?p.id:null,name:p?p.name:'Walk-in',phone:p?p.phone:'',doctor:'',type,
+      disc:0,sub:t.sub,ro:t.ro,total:t.total,paid:type==='Credit'?0:t.total,prevBal:prev,gst:t.gst,items})};
+  mk(svm,'Credit',[[syr,2],[ndl,1],[glu,1]],daysAgo(1));
+  mk(null,'Cash',[[dolo,2],[ors,3]],today());
+  mk(ram,'UPI',[[pan,1],[vol,1]],today());
+  logEv('Sample data loaded');
+}
+
+/* ================= navigation ================= */
+const ICON={
+ home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+ bill:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4"/>',
+ purchase:'<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>',
+ meds:'<rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-40 12 12)"/><path d="M9.2 8.8l5.8 6.4"/>',
+ parties:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-4 3-6 7-6s7 2 7 6M16 4.6a3.5 3.5 0 010 6.8M18 14.2c2.4.6 4 2.6 4 5.8"/>',
+ reports:'<path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'};
+const NAV=[['home','Home',''],['bill','New Bill','F2'],['purchase','Purchase','F3'],['meds','Medicines','F6'],['parties','Customers',''],['reports','Reports',''],['settings','Settings','']];
+let view='home';
+function backupBox(){
+  if(!S)return'';
+  if(dirHandle&&backupState==='on')return`<div class="bk ok"><span><b>Auto backup on</b><br>Last saved ${timeAgo(lastBackup)}</span></div>`;
+  if(dirHandle)return`<div class="bk warn"><span><b>Auto backup paused</b><br>Click to allow saving to your backup folder.</span><button class="btn sm" data-act="resumeBackup">Resume backup</button></div>`;
+  const old=!lastBackup||Date.now()-Date.parse(lastBackup)>864e5;
+  return`<div class="bk ${old?'warn':'ok'}"><span><b>Last backup</b><br>${timeAgo(lastBackup)}</span><button class="btn sm" data-act="backup">Back up now</button></div>`;
+}
+function drawNav(){$('#nav').innerHTML='<div class="brand"><i>+</i><span>Pharmacy Counter<br><span class="beta">BETA TEST</span></span></div>'+NAV.map(([k,l,kb])=>`<button data-go="${k}" class="${view===k?'on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${l}${kb?`<kbd>${kb}</kbd>`:''}</button>`).join('')+`<button class="themebtn" data-act="cycleTheme" title="Switch day / night"><svg viewBox="0 0 24 24">${(S&&S.settings.theme)==='dark'?'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>':(S&&S.settings.theme)==='light'?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 000-18z" fill="currentColor"/>'}</svg>${THEME_LABEL[(S&&S.settings.theme)||'auto'].split(' ')[0]}</button>`+backupBox()}
+function go(v){view=v;render();window.scrollTo(0,0)}
+const V={},AFTER={};
+function render(){applyTheme();document.body.classList.toggle('large',!!S.settings.large);drawNav();$('#main').innerHTML=(S.sample?`<div class="banner"><span>You are looking at <b>sample medicines, customers and bills</b>. Remove them when you are ready to enter your own.</span><button class="btn sm" data-act="clearSample">Remove sample data</button></div>`:'')+V[view]();if(AFTER[view])AFTER[view]()}
+
+/* ================= FIRST-TIME SETUP ================= */
+V.setup=()=>{const s=S.settings;return`<div class="head"><div><h1>Set up your shop</h1><p class="muted">Takes one minute. You can change all of this later in Settings.</p></div></div>
+ <div class="card stack" style="max-width:760px">
+  <div class="form">
+   <label class="wide">Shop name<input id="w_shop" value="${s.shop==='My Medical Store'?'':esc(s.shop)}" placeholder="e.g. Bansal Medical Hall"></label>
+   <label class="wide">Address<input id="w_addr" value="${esc(s.addr)}"></label>
+   <label>Phone<input id="w_phone" inputmode="tel" value="${s.phone==='98XXXXXXXX'?'':esc(s.phone)}"></label>
+   <label>Drug licence no.<input id="w_dl" value="${esc(s.dl)}"></label>
+  </div>
+  <h3 style="margin:6px 0 0">How do you want to start?</h3>
+  <div class="welcome">${[['billing','Billing only','Start billing today. Pick any medicine from the 2.4 lakh database; no stock to enter.'],['track','Billing + stock','Track stock, batches and expiry. Import your stock from Excel or add as you buy.']].map(([v,t,d])=>`<button data-act="wStock" data-v="${v}" style="${(s.stock||'track')===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span></button>`).join('')}</div>
+  <h3 style="margin:6px 0 0">How do you charge GST?</h3>
+  <div class="welcome" id="w_gst">${[['regular','Regular GST','I have a GSTIN and give tax invoices'],['composition','Composition dealer','I pay tax on turnover; bill of supply'],['unregistered','Not registered','Small shop, no GST number']].map(([v,t,d])=>`<button data-act="wGst" data-v="${v}" style="${s.gstType===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span></button>`).join('')}</div>
+  <label id="w_gstinwrap" ${s.gstType==='regular'?'':'hidden'}>GSTIN<input id="w_gstin" maxlength="15" value="${esc(s.gstin)}" placeholder="03ABCDE1234F1Z5"></label>
+  <h3 style="margin:6px 0 0">Which printer do you use?</h3>
+  <div class="welcome" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${[['A5','Half page (A5)','Normal printer, like your old slips'],['A4','Full page (A4)','Normal printer'],['80mm','Thermal 3 inch','Receipt printer'],['58mm','Thermal 2 inch','Small receipt printer']].map(([v,t,d])=>`<button data-act="wPaper" data-v="${v}" style="${s.paper===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span></button>`).join('')}</div>
+  <div class="row"><button class="btn pri big" data-act="wSave">Save and start</button></div>
+ </div>`};
+
+/* ================= HOME ================= */
+V.home=()=>{
+  const t=today(),ts=S.sales.filter(s=>s.date===t&&!s.cancelled),tsum=ts.reduce((a,s)=>a+s.total,0);
+  const coll=S.parties.filter(p=>p.type==='customer').reduce((a,p)=>a+Math.max(0,balance(p)),0);
+  const pay=S.parties.filter(p=>p.type==='supplier').reduce((a,p)=>a+Math.max(0,balance(p)),0);
+  const ex=billingOnly()?[]:expiryList(),low=billingOnly()?[]:lowStock(),recent=[...S.sales].reverse().slice(0,6);
+  const needBk=!S.sample&&backupState!=='on'&&(!lastBackup||Date.now()-Date.parse(lastBackup)>864e5);
+  const tile=(k,v,s,cls,go,tab)=>`<button class="tile ${cls}" data-go="${go}" ${tab?`data-tab="${tab}"`:''}><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></button>`;
+  return`${needBk?`<div class="banner"><span><b>Your records were not backed up today.</b> If this computer's browser data is cleared, unsaved records are lost.</span><span class="row"><button class="btn sm pri" data-act="backup">Download backup</button><button class="btn sm" data-go="settings">Set up auto backup</button></span></div>`:''}
+  ${checklist()}
+  <div class="head"><div><h1>${esc(S.settings.shop)}</h1><p class="muted">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p></div>
+   <div class="row"><button class="btn pri big" data-go="bill">+ New Bill</button><button class="btn big" data-go="purchase">+ Purchase Entry</button></div></div>
+  <div class="tiles">
+   ${tile("Today's sales",money(tsum),ts.length+' bills','','reports','day')}
+   ${tile('To collect',money(coll),'from customers',coll>0?'warn':'','parties')}
+   ${tile('To pay',money(pay),'to suppliers','','parties')}
+   ${billingOnly()?tile('Bills this month',S.sales.filter(s=>!s.cancelled&&s.date.slice(0,7)===t.slice(0,7)).length,'stock tracking is off','','reports','sales'):tile('Expiry alerts',ex.length,'batches expired or within 3 months',ex.length?'bad':'','reports','expiry')+tile('Low stock',low.length,'medicines to reorder',low.length?'warn':'','reports','low')}
+  </div>
+  <div class="two">
+   <section class="card"><h3>Recent bills</h3>${recent.length?`<div class="tw"><table class="t"><tbody>${recent.map(s=>`<tr class="${s.cancelled?'cancel':''}"><td>${esc(s.no)}<div class="sub">${dmy(s.date)}</div></td><td>${esc(s.name)}</td><td><span class="chip ${s.type==='Credit'?'warn':''}">${s.type}</span></td><td class="r">${money(s.total)}</td><td class="r"><button class="btn sm" data-act="viewBill" data-id="${s.id}">View</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No bills yet. Press New Bill (F2) to make the first one.</div>'}</section>
+   <section class="card"><h3>Needs attention</h3>${ex.length+low.length?`<div class="tw"><table class="t"><tbody>
+     ${ex.slice(0,5).map(b=>{const m=med(b.medId);return`<tr><td>${esc(m?m.name:'')}<div class="sub">Batch ${esc(b.batch)} · ${fmtStock(b.qty,m)} left</div></td><td class="r"><span class="chip ${isExpired(b.exp)?'bad':'warn'}">${isExpired(b.exp)?'Expired':'Expires'} ${expF(b.exp)}</span></td></tr>`}).join('')}
+     ${low.slice(0,5).map(m=>{const s=stockOf(m.id);return`<tr><td>${esc(m.name)}<div class="sub">Reorder level ${m.min||0}</div></td><td class="r"><span class="chip ${s>0?'warn':'bad'}">${s>0?'Only '+fmtStock(s,m)+' left':'Out of stock'}</span></td></tr>`}).join('')}
+   </tbody></table></div>`:'<div class="empty">All good. No expiring or low-stock medicines.</div>'}</section>
+  </div>`;
+};
+
+/* ================= NEW BILL ================= */
+function checklist(){
+  if(S.sample)return'';const st=S.settings;
+  const steps=[[st.setupDone,'Set up shop name, GST type and printer','setup','Set up'],...(billingOnly()?[]:[[S.batches.some(b=>b.qty>0),'Add your stock: import your Excel stock list, or enter purchases','meds','Import stock']]),[S.sales.length>0,'Make your first bill','bill','New bill'],[!!lastBackup||backupState==='on','Set up backup so you never lose records','settings','Backup']];
+  if(steps.every(x=>x[0]))return'';
+  return`<section class="card stack" style="margin-bottom:16px"><h3 style="margin:0">Get started: ${steps.filter(x=>x[0]).length} of ${steps.length} done</h3><div class="check">${steps.map(([d,t,g,b],i)=>`<div class="ck ${d?'done':''}"><i>${d?'✓':i+1}</i><span>${t}</span>${d?'':`<button class="btn sm pri" data-go="${g}">${b}</button>`}</div>`).join('')}</div></section>`;
+}
+const newBill=()=>({date:today(),name:'',phone:'',doctor:'',type:'Cash',items:[],disc:'',paid:'',editId:null,editOld:null});
+let bill=newBill(),hi=0,results=[];
+const editExtra=bid=>bill.editOld?bill.editOld.items.filter(i=>i.batchId===bid).reduce((a,i)=>a+packs(i),0):0;
+const avail=b=>r4((b?b.qty:0)+(b?editExtra(b.id):0));
+V.bill=()=>`${bill.editId?`<div class="banner info"><span>You are <b>editing bill ${esc(bill.editOld.no)}</b>. Saving replaces it and keeps the same number.</span><button class="btn sm" data-act="cancelEdit">Stop editing</button></div>`:''}
+ <div class="head"><div><h1>${bill.editId?'Edit Bill':'New Bill'}</h1><p class="muted">Bill no. ${esc(bill.editId?bill.editOld.no:S.settings.prefix+pad(S.settings.nextNo))} · <span class="keys"><kbd>F4</kbd> search · <kbd>Enter</kbd> add · <kbd>F10</kbd> save &amp; print</span></p></div>
+  <div class="seg" role="group" aria-label="Payment">${['Cash','UPI','Credit'].map(t=>`<button data-act="btype" data-v="${t}" class="${bill.type===t?'on':''}">${t==='Credit'?'Credit (Udhaar)':t}</button>`).join('')}</div></div>
+ <div class="billgrid">
+  <div class="stack">
+   <div class="card form">
+    <label class="wide">Patient / customer name<input id="b_name" list="custlist" autocomplete="off" value="${esc(bill.name)}" placeholder="Leave blank for walk-in"></label>
+    <label>Phone (for WhatsApp bill)<input id="b_phone" inputmode="tel" value="${esc(bill.phone)}"></label>
+    <label>Doctor name<input id="b_doctor" value="${esc(bill.doctor)}"></label>
+    <label>Date<input id="b_date" type="date" max="${today()}" value="${bill.date}"></label>
+    <div class="custinfo wide" id="custinfo"></div>
+    <datalist id="custlist">${S.parties.filter(p=>p.type==='customer').map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>
+   </div>
+   <div class="card stack">
+    <div class="search"><input id="medsearch" placeholder="Type medicine, salt or scan barcode…" autocomplete="off" aria-label="Search medicine"><div class="results" id="results"></div></div>
+    <div class="tw"><table class="t" id="cart"></table></div>
+   </div>
+  </div>
+  <div class="card totals" id="totals">
+   <div class="tl"><span>Items</span><b id="t_items">0</b></div>
+   <div class="tl"><span>Sub total</span><span id="t_sub">₹0.00</span></div>
+   <div class="tl"><span>Discount (₹)</span><input id="b_disc" type="number" step="0.01" min="0" value="${esc(bill.disc)}" placeholder="0"></div>
+   <div class="tl" ${gstOn()?'':'hidden'}><span class="muted">GST included</span><span class="muted" id="t_gst">₹0.00</span></div>
+   <div class="tl"><span>Round off</span><span id="t_ro">0.00</span></div>
+   <div class="tl big"><span>Total</span><span id="t_total">₹0</span></div>
+   <div class="tl" id="paidrow"><span>Paid now (₹)</span><input id="b_paid" type="number" step="0.01" min="0" value="${esc(bill.paid)}" placeholder="0"></div>
+   <div id="t_bal" class="note"></div>
+   <div id="recvrow" class="stack" style="gap:6px"><div class="tl"><span>Cash received (₹)</span><input id="b_recv" type="number" min="0" step="1" placeholder="0"></div><div class="change" id="t_change" hidden></div></div>
+   <button class="btn pri big" data-act="saveBill" data-print="1">Save &amp; Print</button>
+   <div class="row"><button class="btn" style="flex:1" data-act="saveBill">Save only</button><button class="btn danger" data-act="clearBill">Clear</button></div>
+  </div>
+ </div>
+ <div class="mbar"><span>Total <b id="m_total">₹0</b></span><button class="btn pri" data-act="saveBill" data-print="1">Save &amp; Print</button></div><div style="height:70px"></div>`;
+AFTER.bill=()=>{
+  const s=$('#medsearch');
+  s.addEventListener('input',()=>{hi=0;drawResults()});
+  s.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){hi=Math.min(hi+1,results.length-1);drawResults(true);e.preventDefault()}
+    else if(e.key==='ArrowUp'){hi=Math.max(hi-1,0);drawResults(true);e.preventDefault()}
+    else if(e.key==='Enter'){if(results[hi])addToCart(results[hi].m.id);e.preventDefault()}
+    else if(e.key==='Escape'){s.value='';drawResults()}});
+  ['name','phone','doctor','date'].forEach(k=>$('#b_'+k).addEventListener('input',e=>{bill[k]=e.target.value;if(k==='name')fillCustomer()}));
+  $('#b_disc').addEventListener('input',e=>{bill.disc=e.target.value;drawTotals()});
+  $('#b_paid').addEventListener('input',e=>{bill.paid=e.target.value;drawTotals()});
+  $('#b_recv').addEventListener('input',drawTotals);
+  showCustInfo();
+  $('#cart').addEventListener('input',cartInput);
+  $('#cart').addEventListener('change',e=>{if(e.target.dataset.k==='batchId')cartInput(e)});
+  $('#cart').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#medsearch').focus()}});
+  drawCart();s.focus();
+};
+function fillCustomer(){const p=S.parties.find(x=>x.type==='customer'&&x.name.toLowerCase()===bill.name.trim().toLowerCase());if(p&&!bill.phone){bill.phone=p.phone||'';$('#b_phone').value=bill.phone}showCustInfo();drawTotals()}
+function lastSaleOf(name){const n=name.trim().toLowerCase();if(!n)return null;return[...S.sales].reverse().find(s=>!s.cancelled&&s.name.toLowerCase()===n&&s.id!==bill.editId)||null}
+function showCustInfo(){const el=$('#custinfo');if(!el)return;const p=S.parties.find(x=>x.type==='customer'&&x.name.toLowerCase()===bill.name.trim().toLowerCase()),last=lastSaleOf(bill.name);
+  if(!p&&!last){el.innerHTML='';return}const b=p?balance(p):0;
+  el.innerHTML=`${p?`<span class="chip ${b>0?'warn':''}">Balance ${money(b)}</span>`:''}${last?`<span>Last bill ${dmy(last.date)}: ${last.items.length} items, ${money(last.total)}</span><button class="btn sm" data-act="repeatLast">Repeat last bill</button>`:''}`}
+function searchMeds(q){
+  const nq=norm(q);if(!nq)return[];
+  const out=[];
+  for(const m of S.meds){
+    const nn=norm(m.name);let sc=0,why='';
+    if(m.barcode&&m.barcode===q.trim()){sc=10}
+    else if(nn.startsWith(nq))sc=4;
+    else if(nn.includes(nq))sc=3;
+    else if(norm(m.salt).includes(nq)){sc=2;why='salt'}
+    else if(norm(m.company).includes(nq))sc=1.5;
+    else{let i=0;for(const ch of nn){if(ch===nq[i])i++;if(i===nq.length)break}if(i===nq.length&&nq.length>=3)sc=1}
+    if(sc)out.push({m,sc,why});
+  }
+  return out.sort((a,b)=>b.sc-a.sc||(stockOf(b.m.id)>0)-(stockOf(a.m.id)>0)||a.m.name.localeCompare(b.m.name)).slice(0,8);
+}
+function drawResults(keep){
+  const q=$('#medsearch').value;
+  if(!q.trim()){results=[];$('#results').innerHTML='';return}
+  if(!keep)results=searchMeds(q);
+  const skip=new Set(S.meds.map(m=>norm(m.name))),cats=results.length<6?catSearch(q,6-results.length+2,skip):[];
+  if(!CAT&&q.trim().length>=2)loadCatalog();
+  const catHtml=cats.length?`<div class="reshead">From the medicine database · tap to add to the bill (${CAT.r.length.toLocaleString('en-IN')} medicines)</div>`+cats.map(c=>`<button class="res cat" data-act="catAdd" data-name="${esc(c.name)}"><span><b>${esc(c.name)}</b><div class="sub">${esc(c.pack)} · ${esc(c.company)}${c.salt?' · '+esc(c.salt):''}</div></span><span class="rt">Add to bill<div class="sub">ref. MRP ${money(c.mrp)}</div></span></button>`).join(''):'';
+  if(!results.length&&cats.length){$('#results').innerHTML=catHtml;return}
+  $('#results').innerHTML=results.length?results.map(({m,why},i)=>{const st=stockOf(m.id);return`<button class="res ${i===hi?'hi':''}" data-act="addMed" data-id="${m.id}"><span><b>${esc(m.name)}</b><div class="sub">${esc(m.pack)} · ${esc(m.company)}${m.salt?` · ${why==='salt'?'<b>':''}${esc(m.salt)}${why==='salt'?'</b>':''}`:''}${m.sched?` · <span class="chip warn">Sch. ${m.sched}</span>`:''}</div></span><span class="rt">MRP ${money(m.mrp)}${billingOnly()?'':`<div class="${st>0?'sub':'chip bad'}">${st>0?'Stock '+fmtStock(st,m):'Out of stock'}</div>`}</span></button>`}).join('')+catHtml
+    :`<div class="empty">No medicine matches “${esc(q)}”. <button class="btn sm pri" data-act="quickAdd">+ Add “${esc(q.trim().toUpperCase())}” as a new medicine</button></div>`;
+}
+function addToCart(id){
+  const m=med(id);
+  if(billingOnly()){const ex=bill.items.findIndex(i=>i.medId===id&&i.nostock&&!i.loose);let idx;
+    if(ex>=0){bill.items[ex].qty=(+bill.items[ex].qty||0)+1;idx=ex}else{bill.items.push({medId:id,batchId:null,nostock:true,batchTxt:'',exp:'',qty:1,loose:false,mrp:m.mrp,rate:m.mrp,disc:'',gst:m.gst});idx=bill.items.length-1}
+    $('#medsearch').value='';results=[];$('#results').innerHTML='';drawCart();const q=$('#q_'+idx);if(q){q.focus();q.select()}return}
+  const bs=S.batches.filter(b=>b.medId===id&&avail(b)>0&&!isExpired(b.exp)).sort((a,b)=>(a.exp||'9999').localeCompare(b.exp||'9999'));
+  if(!bs.length){
+    bill.items.push({medId:id,batchId:null,nostock:true,batchTxt:'',exp:'',qty:1,loose:false,mrp:m.mrp,rate:m.mrp,disc:'',gst:m.gst});const idx=bill.items.length-1;
+    $('#medsearch').value='';results=[];$('#results').innerHTML='';drawCart();const q=$('#q_'+idx);if(q){q.focus();q.select()}
+    const subs=m.salt?S.meds.filter(x=>x.id!==id&&norm(x.salt)===norm(m.salt)&&stockOf(x.id)>0).map(x=>x.name):[];
+    toast(`${m.name} is not in stock, added anyway. Type batch and expiry if you like.`+(subs.length?` Same salt in stock: ${subs.slice(0,3).join(', ')}.`:''));return}
+  const ex=bill.items.findIndex(i=>i.batchId===bs[0].id&&!i.loose);
+  let idx;if(ex>=0){bill.items[ex].qty=(+bill.items[ex].qty||0)+1;idx=ex}
+  else{bill.items.push({medId:id,batchId:bs[0].id,qty:1,loose:false,mrp:bs[0].mrp,rate:bs[0].sale||bs[0].mrp,disc:'',gst:m.gst});idx=bill.items.length-1}
+  $('#medsearch').value='';results=[];$('#results').innerHTML='';
+  drawCart();const q=$('#q_'+idx);if(q){q.focus();q.select()}
+}
+function rowState(it){
+  if(it.nostock){const bad=+it.rate>+it.mrp+0.005;return{bad,note:bad?'Rate is above MRP':(billingOnly()?'':'Not in stock · sold without stock')}}
+  const m=med(it.medId),b=bat(it.batchId),need=packs(it),av=avail(b),notes=[];let bad=false;
+  if(b&&need>av+1e-9)notes.push(`Stock shows only ${fmtStock(av,m)} in this batch; it will go below zero`);
+  if(+it.rate>+it.mrp+0.005){bad=true;notes.push('Rate is above MRP')}
+  if(!bad&&b&&+it.rate*(1-(+it.disc||0)/100)<(it.loose?b.pur/(m.units||1):b.pur)-0.005)notes.push('Below purchase cost');
+  return{bad,note:notes.join(' · ')};
+}
+function drawCart(){
+  const c=$('#cart');if(!c)return;
+  if(!bill.items.length){c.innerHTML='<tbody><tr><td class="empty">Search above and press Enter to add medicines. Barcode scanners work here too.</td></tr></tbody>';drawTotals();return}
+  c.innerHTML=`<thead><tr><th>Medicine</th><th>Batch</th><th>Exp</th><th class="r">Qty</th><th class="r">MRP</th><th class="r">Rate</th><th class="r">Disc %</th><th class="r">GST</th><th class="r">Amount</th></tr></thead><tbody>${
+    bill.items.map((it,i)=>{const m=med(it.medId),b=bat(it.batchId),bs=it.nostock?[]:S.batches.filter(x=>x.medId===it.medId&&(avail(x)>0||x.id===it.batchId)&&!isExpired(x.exp));
+    const st=rowState(it);
+    return`<tr id="row_${i}" class="${st.bad?'warnrow':''}"><td class="nm"><div class="nmrow"><div><b>${esc(m.name)}</b><div class="sub" id="st_${i}" style="${st.note?(st.bad?'color:var(--bad)':'color:var(--warn)'):''}">${esc(st.note||m.pack)}</div>
+      ${m.units>1?`<button class="unit ${it.loose?'on':''}" data-act="loose" data-i="${i}">${it.loose?`Loose ${unitWord(m)}s`:`Full ${m.units>1?'strip':'pack'}`} ⇄</button>`:''}</div>
+      <button class="x" data-act="rmItem" data-i="${i}" aria-label="Remove ${esc(m.name)}">×</button></div></td>
+     ${it.nostock?`<td data-l="Batch"><input data-i="${i}" data-k="batchTxt" id="bt_${i}" value="${esc(it.batchTxt)}" placeholder="optional" style="width:80px" aria-label="Batch"></td>
+     <td data-l="Expiry"><input data-i="${i}" data-k="exp" id="ex_${i}" type="month" value="${it.exp}" style="width:130px" aria-label="Expiry"></td>`:`<td data-l="Batch"><select data-i="${i}" data-k="batchId" id="bt_${i}" aria-label="Batch">${bs.map(x=>`<option value="${x.id}" ${x.id===it.batchId?'selected':''}>${esc(x.batch)} (${fmtStock(avail(x),m)})</option>`).join('')}</select></td>
+     <td data-l="Expiry">${b?`<span class="chip ${isSoon(b.exp)?'warn':''}">${expF(b.exp)}</span>`:''}</td>`}
+     <td data-l="${it.loose?'Qty ('+unitWord(m)+'s)':'Qty'}"><input id="q_${i}" data-i="${i}" data-k="qty" type="number" min="1" step="1" value="${it.qty}" style="width:70px" aria-label="Quantity"></td>
+     <td class="r" data-l="MRP${it.loose?' / '+unitWord(m):''}">${it.nostock?`<input data-i="${i}" data-k="mrp" id="mr_${i}" type="number" step="0.01" min="0" value="${it.mrp}" style="width:90px" aria-label="MRP">`:n2(it.mrp)}</td>
+     <td data-l="Rate"><input id="rt_${i}" data-i="${i}" data-k="rate" type="number" step="0.01" min="0" value="${it.rate}" style="width:90px" aria-label="Rate"></td>
+     <td data-l="Disc %"><input id="ds_${i}" data-i="${i}" data-k="disc" type="number" step="0.01" min="0" max="100" value="${it.disc}" placeholder="0" style="width:70px" aria-label="Discount percent"></td>
+     <td class="r" data-l="GST">${gstOn()?it.gst+'%':'—'}</td><td class="r" data-l="Amount" id="am_${i}">${n2(lineAmt(it))}</td></tr>`}).join('')}</tbody>`;
+  drawTotals();
+}
+function cartInput(e){
+  const t=e.target,i=+t.dataset.i,k=t.dataset.k;if(isNaN(i)||!k)return;
+  const it=bill.items[i];it[k]=t.value;
+  if(k==='batchId'){const b=bat(t.value),u=med(it.medId).units||1;it.mrp=it.loose?r4(b.mrp/u):b.mrp;it.rate=it.loose?r2((b.sale||b.mrp)/u):(b.sale||b.mrp);drawCart();return}
+  if(k==='disc'&&(+t.value>100||+t.value<0)){it.disc=Math.min(100,Math.max(0,+t.value));t.value=it.disc}
+  const st=rowState(it),m=med(it.medId);
+  $('#row_'+i).className=st.bad?'warnrow':'';const n=$('#st_'+i);n.textContent=st.note||m.pack;n.style.color=st.note?(st.bad?'var(--bad)':'var(--warn)'):'';
+  $('#am_'+i).textContent=n2(lineAmt(it));drawTotals();
+}
+function drawTotals(){
+  if(!$('#t_sub'))return;
+  const t=saleTotals(bill.items,bill.disc),gst=Object.values(t.gst).reduce((a,g)=>a+g.tax,0);
+  $('#t_items').textContent=bill.items.length;$('#t_sub').textContent=money(t.sub);$('#t_gst').textContent=money(gst);
+  $('#t_ro').textContent=n2(t.ro);$('#t_total').textContent='₹'+t.total.toLocaleString('en-IN');
+  $('#paidrow').hidden=bill.type!=='Credit';
+  if($('#m_total'))$('#m_total').textContent='₹'+t.total.toLocaleString('en-IN');
+  const rr=$('#recvrow');if(rr){rr.hidden=bill.type!=='Cash';const rv=+$('#b_recv').value||0,ch=$('#t_change');ch.hidden=!rv;
+    if(rv)ch.innerHTML=rv>=t.total?`<span>Return to customer</span><span style="font-size:20px">₹${(rv-t.total).toLocaleString('en-IN')}</span>`:`<span style="color:var(--bad)">Still to collect</span><span style="font-size:20px;color:var(--bad)">₹${(t.total-rv).toLocaleString('en-IN')}</span>`}
+  const p=S.parties.find(x=>x.type==='customer'&&x.name.toLowerCase()===bill.name.trim().toLowerCase());
+  let prev=p?balance(p):0;if(bill.editOld&&p&&bill.editOld.partyId===p.id)prev=r2(prev-(bill.editOld.total-(+bill.editOld.paid||0)));
+  $('#t_bal').innerHTML=bill.type==='Credit'?(p?`Old balance ${money(prev)} → after this bill <b>${money(prev+t.total-(+bill.paid||0))}</b>`:(bill.name.trim()?'New customer. They will be added to Customers when you save.':'Enter the customer name for a credit bill.'))
+    :(p&&prev?`${esc(p.name)} has an old balance of ${money(prev)}.`:'');
+}
+function saveBill(print){
+  if(!bill.items.length)return toast('Add at least one medicine to the bill.');
+  if(bill.date>today())return toast('The bill date cannot be in the future.');
+  for(const it of bill.items){const m=med(it.medId),b=bat(it.batchId);
+    if(it.nostock){if(!m)return toast('A medicine on this bill no longer exists. Remove it and add again.');if(!(+it.qty>0))return toast(`Enter a quantity for ${m.name}.`);
+      if(!(+it.mrp>0))return toast(`Enter the MRP for ${m.name}.`);if(+it.rate>+it.mrp+0.005)return toast(`${m.name}: rate is above MRP. Selling above MRP is not allowed.`);
+      if((m.sched==='H1'||m.sched==='X')&&(!bill.doctor.trim()||!bill.name.trim()))return toast(`${m.name} is Schedule ${m.sched}. Enter the patient and doctor name.`);continue}
+    if(!m||!b)return toast('A medicine or batch on this bill no longer exists. Remove it and add again.');
+    if(!(+it.qty>0)||(it.loose&&!Number.isInteger(+it.qty)))return toast(`Enter a whole-number quantity for ${m.name}.`);
+    if(+it.rate>+it.mrp+0.005)return toast(`${m.name}: rate ₹${n2(it.rate)} is above MRP ₹${n2(it.mrp)}. Selling above MRP is not allowed.`);
+    if(+it.disc<0||+it.disc>100)return toast(`${m.name}: discount must be between 0 and 100%.`);
+    if((m.sched==='H1'||m.sched==='X')&&!bill.doctor.trim())return toast(`${m.name} is Schedule ${m.sched}. Enter the doctor's name.`);
+    if((m.sched==='H1'||m.sched==='X')&&!bill.name.trim())return toast(`${m.name} is Schedule ${m.sched}. Enter the patient's name for the register.`)}
+  const name=bill.name.trim();let p=null;
+  if(name){p=S.parties.find(x=>x.type==='customer'&&x.name.toLowerCase()===name.toLowerCase());
+    if(!p&&(bill.type==='Credit'||bill.phone.trim())){p={id:uid(),type:'customer',name,phone:bill.phone.trim(),addr:'',gstin:'',opening:0};S.parties.push(p)}}
+  if(bill.type==='Credit'&&!p)return toast('Enter the customer name for a credit (udhaar) bill.');
+  const old=bill.editOld?S.sales.find(s=>s.id===bill.editId):null;
+  if(old)old.items.forEach(i=>{const b=bat(i.batchId);if(b)b.qty=r4(b.qty+packs(i))});
+  const t=saleTotals(bill.items,bill.disc),paid=bill.type==='Credit'?Math.min(Math.max(+bill.paid||0,0),t.total):t.total;
+  const prev=old&&p&&old.partyId===p.id?old.prevBal:(p?balance(p):0);
+  const sale={id:old?old.id:uid(),no:old?old.no:S.settings.prefix+pad(S.settings.nextNo),date:bill.date||today(),partyId:p?p.id:null,name:name||'Walk-in',phone:bill.phone.trim(),doctor:bill.doctor.trim(),type:bill.type,
+    disc:t.disc,sub:t.sub,ro:t.ro,total:t.total,paid,prevBal:prev,gst:t.gst,
+    items:bill.items.map(it=>{const m=med(it.medId),b=bat(it.batchId);
+      if(it.nostock){if(!it.loose&&+it.mrp!==+m.mrp)m.mrp=+it.mrp;return{medId:m.id,batchId:null,nostock:true,name:m.name,pack:m.pack,hsn:m.hsn,sched:m.sched,batch:(it.batchTxt||'').toUpperCase(),exp:it.exp||'',qty:+it.qty,loose:!!it.loose,units:m.units||1,unitName:unitWord(m),mrp:+it.mrp,rate:+it.rate,disc:+it.disc||0,gst:+it.gst,pur:0}}
+      const pk=packs({...it,units:m.units});b.qty=r4(b.qty-pk);
+      return{medId:m.id,batchId:b.id,name:m.name,pack:m.pack,hsn:m.hsn,sched:m.sched,batch:b.batch,exp:b.exp,qty:+it.qty,loose:!!it.loose,units:m.units||1,unitName:unitWord(m),mrp:+it.mrp,rate:+it.rate,disc:+it.disc||0,gst:+it.gst,pur:+b.pur||0}})};
+  if(old){S.sales[S.sales.indexOf(old)]=sale;logEv(`Bill ${sale.no} edited (was ${money(old.total)}, now ${money(sale.total)})`)}
+  else{S.sales.push(sale);S.settings.nextNo++}
+  save();bill=newBill();render();toast(`Saved bill ${sale.no} for ${money(sale.total)}.`);
+  showBill(sale.id,true);if(print)doPrint(invoiceHTML(sale));
+}
+
+/* ================= PURCHASE ================= */
+const pRow=()=>({name:'',pack:'',hsn:'',batch:'',exp:'',qty:'',free:'',mrp:'',pur:'',disc:'',gst:5,sale:''});
+const newPur=()=>({party:'',inv:'',date:today(),type:'Credit',paid:'',rows:[pRow(),pRow(),pRow()]});
+let pur=newPur();
+V.purchase=()=>`<div class="head"><div><h1>Purchase Entry</h1><p class="muted">Enter the distributor's bill. Stock is added batch-wise when you save.</p></div>
+  <div class="seg"><button data-act="ptype" data-v="Cash" class="${pur.type==='Cash'?'on':''}">Paid now</button><button data-act="ptype" data-v="Credit" class="${pur.type==='Credit'?'on':''}">Credit</button></div></div>
+ <div class="stack">
+  <div class="card form">
+   <label class="wide">Supplier / distributor<input id="p_party" list="supplist" value="${esc(pur.party)}" autocomplete="off" placeholder="e.g. City Medical Agencies"></label>
+   <label>Supplier bill no.<input id="p_inv" value="${esc(pur.inv)}"></label>
+   <label>Bill date<input id="p_date" type="date" max="${today()}" value="${pur.date}"></label>
+   <datalist id="supplist">${S.parties.filter(p=>p.type==='supplier').map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>
+
+  </div>
+  <div class="card stack">
+   <div class="tw"><table class="t" id="ptable"></table></div>
+   <div class="row"><button class="btn" data-act="addPRow">+ Add row</button><span class="note">New medicine names are added to Medicines automatically. Free qty is added to stock at zero cost. Most medicines are 5% GST since 22 Sep 2025.</span></div>
+  </div>
+  <div class="card row" style="justify-content:space-between">
+   <div class="row" style="gap:22px"><span>Taxable <b id="p_base">₹0.00</b></span><span>GST <b id="p_tax">₹0.00</b></span><span style="font-size:20px">Total <b id="p_total">₹0</b></span>
+    <label id="p_paidwrap" style="grid-auto-flow:column;align-items:center" ${pur.type==='Credit'?'':'hidden'}>Paid now (₹)<input id="p_paid" type="number" step="0.01" min="0" value="${esc(pur.paid)}" style="width:110px" placeholder="0"></label></div>
+   <div class="row"><button class="btn danger" data-act="clearPur">Clear</button><button class="btn pri big" data-act="savePur">Save Purchase</button></div>
+  </div>
+ </div>`;
+AFTER.purchase=()=>{
+  [['party','p_party'],['inv','p_inv'],['date','p_date'],['paid','p_paid']].forEach(([k,id])=>$('#'+id).addEventListener('input',e=>pur[k]=e.target.value));
+  const t=$('#ptable');
+  t.addEventListener('input',e=>{const i=+e.target.dataset.i,k=e.target.dataset.k;if(isNaN(i))return;pur.rows[i][k]=e.target.value;if(k==='name')fillNameList(e.target.value);if(k!=='name'){$('#pa_'+i).textContent=n2(purAmt(pur.rows[i]));drawPTotals()}});
+  t.addEventListener('change',e=>{if(e.target.dataset.k!=='name')return;const i=+e.target.dataset.i,r=pur.rows[i],m=S.meds.find(x=>x.name.toLowerCase()===r.name.trim().toLowerCase());
+    if(m){const lb=S.batches.filter(b=>b.medId===m.id).slice(-1)[0];Object.assign(r,{name:m.name,pack:m.pack,hsn:m.hsn,gst:m.gst,mrp:r.mrp||m.mrp,pur:r.pur||(lb?lb.pur:''),sale:r.sale||(lb&&lb.sale!==lb.mrp?lb.sale:'')});drawPRows();const f=$(`#pb_${i}`);if(f)f.focus()}
+    else{const c=catFind(r.name);if(c){Object.assign(r,{name:c.name,pack:r.pack||c.pack,hsn:r.hsn||'3004',mrp:r.mrp||c.mrp,company:c.company,salt:c.salt,units:c.units});drawPRows();const f=$(`#pb_${i}`);if(f)f.focus();toast('Filled from the medicine database. Check the MRP on the pack.')}}});
+  drawPRows();
+};
+const purAmt=r=>{const l=purLine(r);return l.base+l.tax};
+function drawPRows(){
+  const f=(i,k,w,type='text',extra='')=>`<input data-i="${i}" data-k="${k}" id="p${k}_${i}" type="${type}" value="${esc(pur.rows[i][k])}" style="width:${w}px" ${extra} aria-label="${k}">`;
+  $('#ptable').innerHTML=`<thead><tr><th>Medicine</th><th>Pack</th><th>HSN</th><th>Batch</th><th>Expiry</th><th class="r">Qty</th><th class="r">Free</th><th class="r">MRP</th><th class="r">Pur. rate</th><th class="r">Disc %</th><th class="r">GST %</th><th class="r">Sale rate</th><th class="r">Amount</th><th></th></tr></thead><tbody>${
+    pur.rows.map((r,i)=>`<tr><td><input data-i="${i}" data-k="name" id="pn_${i}" list="catlist" value="${esc(r.name)}" style="width:200px" autocomplete="off" aria-label="Medicine"></td>
+    <td>${f(i,'pack',80)}</td><td>${f(i,'hsn',70)}</td><td><input data-i="${i}" data-k="batch" id="pb_${i}" value="${esc(r.batch)}" style="width:95px" aria-label="Batch"></td>
+    <td>${f(i,'exp',140,'month')}</td><td>${f(i,'qty',65,'number','min="0"')}</td><td>${f(i,'free',60,'number','min="0"')}</td><td>${f(i,'mrp',80,'number','step="0.01" min="0"')}</td>
+    <td>${f(i,'pur',85,'number','step="0.01" min="0"')}</td><td>${f(i,'disc',60,'number','step="0.01" min="0" max="100"')}</td>
+    <td><select data-i="${i}" data-k="gst" id="pg_${i}" aria-label="GST">${[0,5,12,18].map(g=>`<option ${+r.gst===g?'selected':''}>${g}</option>`).join('')}</select></td>
+    <td>${f(i,'sale',80,'number','step="0.01" min="0" placeholder="= MRP"')}</td><td class="r" id="pa_${i}">${n2(purAmt(r))}</td>
+    <td><button class="x" data-act="rmPRow" data-i="${i}" aria-label="Remove row">×</button></td></tr>`).join('')}</tbody>`;
+  drawPTotals();
+}
+function drawPTotals(){let b=0,t=0;pur.rows.forEach(r=>{const l=purLine(r);b+=l.base;t+=l.tax});$('#p_base').textContent=money(b);$('#p_tax').textContent=money(t);$('#p_total').textContent='₹'+Math.round(b+t).toLocaleString('en-IN')}
+function savePur(){
+  const rows=pur.rows.filter(r=>r.name.trim());
+  if(!pur.party.trim())return toast('Enter the supplier name.');
+  if(!rows.length)return toast('Add at least one medicine.');
+  if(pur.date>today())return toast('The bill date cannot be in the future.');
+  for(const[i,r]of rows.entries()){const n=`Row ${i+1} (${r.name})`;
+    if(!r.batch.trim())return toast(`${n}: enter the batch number.`);if(!r.exp)return toast(`${n}: enter the expiry month.`);
+    if(!(+r.qty>0)&&!(+r.free>0))return toast(`${n}: enter the quantity.`);if(+r.qty<0||+r.free<0)return toast(`${n}: quantity cannot be negative.`);
+    if(!(+r.mrp>0))return toast(`${n}: enter the MRP.`);if(+r.pur<0)return toast(`${n}: purchase rate cannot be negative.`);
+    if(+r.disc<0||+r.disc>100)return toast(`${n}: discount must be between 0 and 100%.`);
+    if(+r.sale>+r.mrp)return toast(`${n}: sale rate cannot be above MRP.`)}
+  let p=S.parties.find(x=>x.type==='supplier'&&x.name.toLowerCase()===pur.party.trim().toLowerCase());
+  if(p&&pur.inv.trim()){const dup=S.purchases.find(x=>x.partyId===p.id&&x.inv.trim().toLowerCase()===pur.inv.trim().toLowerCase());
+    if(dup)return toast(`Bill ${pur.inv} from ${p.name} is already saved (${dmy(dup.date)}). Saving it again would double the stock.`)}
+  if(!p){p={id:uid(),type:'supplier',name:pur.party.trim(),phone:'',addr:'',gstin:'',opening:0};S.parties.push(p)}
+  let base=0,tax=0;rows.forEach(r=>{const l=purLine(r);base+=l.base;tax+=l.tax});const total=Math.round(base+tax);
+  rows.forEach(r=>{
+    let m=S.meds.find(x=>x.name.toLowerCase()===r.name.trim().toLowerCase());
+    if(!m){m={id:uid(),name:r.name.trim().toUpperCase(),company:r.company||'',pack:r.pack,units:r.units||guessUnits(r.pack),salt:r.salt||'',barcode:'',hsn:r.hsn,gst:+r.gst,mrp:+r.mrp,min:0,sched:''};S.meds.push(m)}
+    else{if(r.pack){m.pack=r.pack;if(m.units<=1)m.units=guessUnits(r.pack)}if(r.hsn)m.hsn=r.hsn;m.gst=+r.gst;m.mrp=+r.mrp}
+    const q=(+r.qty||0)+(+r.free||0);let b=S.batches.find(x=>x.medId===m.id&&x.batch.toLowerCase()===r.batch.trim().toLowerCase());
+    if(b){b.qty=r4(b.qty+q);b.exp=r.exp;b.mrp=+r.mrp;b.pur=+r.pur||0;b.sale=+r.sale||+r.mrp}
+    else S.batches.push({id:uid(),medId:m.id,batch:r.batch.trim().toUpperCase(),exp:r.exp,qty:q,mrp:+r.mrp,pur:+r.pur||0,sale:+r.sale||+r.mrp});
+  });
+  S.purchases.push({id:uid(),inv:pur.inv.trim(),date:pur.date||today(),partyId:p.id,type:pur.type,paid:pur.type==='Cash'?total:Math.min(Math.max(+pur.paid||0,0),total),base,tax,total,
+    rows:rows.map(r=>({...r,name:r.name.trim()}))});
+  save();toast(`Purchase saved. ${rows.length} item(s) added to stock.`);pur=newPur();render();
+}
+
+/* ================= MEDICINES ================= */
+let medFilter='all',medQ='';
+V.meds=()=>`<div class="head"><div><h1>Medicines &amp; Stock</h1><p class="muted">${S.meds.length} medicines · stock value ${money(S.batches.reduce((a,b)=>a+Math.max(0,b.qty)*(+b.pur||0),0))} at purchase rate</p></div>
+  <div class="row"><button class="btn big" data-act="importForm">Import from Excel</button><button class="btn pri big" data-act="medForm">+ Add Medicine</button></div></div>
+ <div class="card stack">
+  <div class="row" style="justify-content:space-between"><input id="medq" placeholder="Search name, salt or company" value="${esc(medQ)}" style="max-width:340px" aria-label="Search medicines">
+   <div class="seg">${[['all','All'],['low','Low stock'],['exp','Expiring'],['out','Out of stock']].map(([k,l])=>`<button data-act="medFilter" data-v="${k}" class="${medFilter===k?'on':''}">${l}</button>`).join('')}</div></div>
+  <div class="tw"><table class="t" id="medtable"></table></div>
+ </div>`;
+AFTER.meds=()=>{$('#medq').addEventListener('input',e=>{medQ=e.target.value;drawMeds()});drawMeds()};
+function drawMeds(){
+  const q=norm(medQ);
+  let list=S.meds.filter(m=>!q||norm(m.name).includes(q)||norm(m.company).includes(q)||norm(m.salt).includes(q));
+  if(medFilter==='low')list=list.filter(m=>{const s=stockOf(m.id);return s>0&&+m.min&&s<=+m.min});
+  if(medFilter==='out')list=list.filter(m=>stockOf(m.id)<=0);
+  if(medFilter==='exp')list=list.filter(m=>S.batches.some(b=>b.medId===m.id&&b.qty>0&&b.exp<=monthAdd(3)));
+  list.sort((a,b)=>a.name.localeCompare(b.name));
+  $('#medtable').innerHTML=list.length?`<thead><tr><th>Medicine</th><th>Salt</th><th>HSN</th><th class="r">GST</th><th class="r">MRP</th><th class="r">Stock</th><th>Nearest expiry</th><th></th></tr></thead><tbody>${list.map(m=>{
+    const s=stockOf(m.id),e=nearestExp(m.id);
+    return`<tr><td><b>${esc(m.name)}</b>${m.sched?` <span class="chip warn">Sch. ${m.sched}</span>`:''}<div class="sub">${esc(m.pack)} · ${esc(m.company||'—')}</div></td><td class="sub">${esc(m.salt||'—')}</td><td>${esc(m.hsn)}</td><td class="r">${m.gst}%</td><td class="r">${n2(m.mrp)}</td>
+    <td class="r">${s<=0?'<span class="chip bad">0</span>':(+m.min&&s<=+m.min?`<span class="chip warn">${fmtStock(s,m)}</span>`:fmtStock(s,m))}</td>
+    <td>${e?`<span class="chip ${isExpired(e)?'bad':isSoon(e)?'warn':''}">${expF(e)}</span>`:'<span class="sub">—</span>'}</td>
+    <td class="r"><button class="btn sm" data-act="medForm" data-id="${m.id}">Edit / stock</button></td></tr>`}).join('')}</tbody>`
+    :'<tbody><tr><td class="empty">No medicines match. Try another search or filter.</td></tr></tbody>';
+}
+function medFormHTML(m){
+  m=m||{gst:5,units:1};const bs=m.id?S.batches.filter(b=>b.medId===m.id):[];
+  const bRow=b=>`<tr data-bid="${b.id||''}"><td><input data-f="batch" value="${esc(b.batch||'')}" aria-label="Batch"></td><td><input data-f="exp" type="month" value="${b.exp||''}" aria-label="Expiry"></td><td><input data-f="qty" type="number" min="0" step="any" value="${b.qty??''}" style="width:80px" aria-label="Quantity in packs"></td><td><input data-f="pur" type="number" min="0" step="0.01" value="${b.pur??''}" style="width:90px" aria-label="Purchase rate"></td><td><input data-f="sale" type="number" min="0" step="0.01" value="${b.sale??''}" style="width:90px" placeholder="= MRP" aria-label="Sale rate"></td></tr>`;
+  return`<h2>${m.id?'Edit medicine':'Add medicine'}</h2>
+  <div class="form">
+   <label class="wide">Medicine name<input id="f_name" list="catlist" autocomplete="off" value="${esc(m.name||'')}" placeholder="Start typing; pick from the medicine database"></label>
+   <label>Company<input id="f_company" value="${esc(m.company||'')}"></label>
+   <label class="wide">Salt / composition<input id="f_salt" value="${esc(m.salt||'')}" placeholder="e.g. Paracetamol 650mg (used to suggest substitutes)"></label>
+   <label>Pack<input id="f_pack" value="${esc(m.pack||'')}" placeholder="15 TAB"></label>
+   <label>Tablets per strip<input id="f_units" type="number" min="1" step="1" value="${m.units||1}" title="For loose tablet sale. 1 = sell whole packs only"></label>
+   <label>Barcode<input id="f_barcode" value="${esc(m.barcode||'')}" placeholder="Scan here"></label>
+   <label>HSN code<input id="f_hsn" value="${esc(m.hsn||'')}" placeholder="3004"></label>
+   <label>GST %<select id="f_gst">${[0,5,12,18].map(g=>`<option ${+m.gst===g?'selected':''}>${g}</option>`).join('')}</select></label>
+   <label>MRP per pack (₹)<input id="f_mrp" type="number" min="0" step="0.01" value="${m.mrp??''}"></label>
+   <label>Reorder level<input id="f_min" type="number" min="0" value="${m.min??''}" placeholder="0"></label>
+   <label>Schedule<select id="f_sched">${[['','General (OTC)'],['H','Schedule H'],['H1','Schedule H1'],['X','Schedule X']].map(([v,l])=>`<option value="${v}" ${(m.sched||'')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  </div>
+  <div><h3>Stock by batch (in packs)</h3><div class="tw"><table class="t"><thead><tr><th>Batch</th><th>Expiry</th><th>Qty</th><th>Pur. rate</th><th>Sale rate</th></tr></thead><tbody id="f_batches">${bs.map(bRow).join('')}${bRow({})}</tbody></table></div>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-act="addBRow">+ Another batch</button><span class="note">Use this for opening stock or to correct a count. Changes are recorded in the activity log.</span></div></div>
+  <div class="mfoot">${m.id?`<button class="btn danger" data-act="delMed" data-id="${m.id}">Delete medicine</button>`:''}<button class="btn pri" data-act="saveMed" data-id="${m.id||''}">Save medicine</button></div>`;
+}
+function fillMedForm(c,all){const set=(id,v)=>{const e=$('#f_'+id);if(e&&(all||!e.value))e.value=v};set('name',c.name);set('company',c.company);set('salt',c.salt);set('pack',c.pack);set('units',c.units);set('mrp',c.mrp);set('hsn','3004')}
+function bindMedForm(){loadCatalog();const n=$('#f_name');if(!n)return;n.addEventListener('input',()=>fillNameList(n.value));n.addEventListener('change',()=>{if(S.meds.some(m=>m.name.toLowerCase()===n.value.trim().toLowerCase()))return;const c=catFind(n.value);if(c){fillMedForm(c,false);toast('Filled from the medicine database. Check the MRP and add schedule if needed.')}})}
+function saveMed(id){
+  const g=k=>$('#f_'+k).value.trim(),name=g('name');
+  if(!name)return toast('Enter the medicine name.');
+  if(S.meds.some(m=>m.id!==id&&m.name.toLowerCase()===name.toLowerCase()))return toast('A medicine with this name already exists.');
+  if(g('barcode')&&S.meds.some(m=>m.id!==id&&m.barcode===g('barcode')))return toast('Another medicine already has this barcode.');
+  const mrp=+g('mrp')||0;
+  const rows=[...document.querySelectorAll('#f_batches tr')].map(tr=>{const v=f=>tr.querySelector(`[data-f="${f}"]`).value.trim();return{bid:tr.dataset.bid,batch:v('batch'),exp:v('exp'),qty:v('qty'),pur:v('pur'),sale:v('sale')}});
+  for(const r of rows){if(+r.qty<0||+r.pur<0||+r.sale<0)return toast('Stock and rates cannot be negative.');if(+r.sale>mrp)return toast(`Batch ${r.batch}: sale rate cannot be above MRP.`);
+    if(!r.bid&&r.batch&&+r.qty>0&&!r.exp)return toast('Enter the expiry month for the new batch.')}
+  let m=id?med(id):null;const data={name:name.toUpperCase(),company:g('company'),salt:g('salt'),pack:g('pack'),units:Math.max(1,parseInt(g('units'))||1),barcode:g('barcode'),hsn:g('hsn'),gst:+g('gst'),mrp,min:+g('min')||0,sched:g('sched')};
+  if(m)Object.assign(m,data);else{m={id:uid(),...data};S.meds.push(m)}
+  for(const r of rows){
+    if(r.bid){const b=bat(r.bid);if(r4(+r.qty||0)!==r4(b.qty))logEv(`Stock corrected: ${m.name} batch ${b.batch} from ${fmtStock(b.qty,m)} to ${fmtStock(+r.qty||0,m)}`);
+      b.batch=r.batch.toUpperCase()||b.batch;b.exp=r.exp||b.exp;b.qty=r4(+r.qty||0);b.pur=+r.pur||0;b.sale=+r.sale||m.mrp;b.mrp=m.mrp}
+    else if(r.batch&&+r.qty>0){S.batches.push({id:uid(),medId:m.id,batch:r.batch.toUpperCase(),exp:r.exp,qty:r4(+r.qty),mrp:m.mrp,pur:+r.pur||0,sale:+r.sale||m.mrp});logEv(`Opening stock added: ${m.name} batch ${r.batch.toUpperCase()}, ${r.qty}`)}
+  }
+  save();closeModal();render();toast(`Saved ${m.name}.`);
+  if(view==='bill'&&stockOf(m.id)>0)addToCart(m.id);
+}
+
+/* ================= IMPORT STOCK (xlsx / csv) ================= */
+async function inflateRaw(data){return new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}
+async function readXlsx(buf){
+  const dv=new DataView(buf),u8=new Uint8Array(buf),td=new TextDecoder();let e=buf.byteLength-22;
+  while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)throw new Error('not-xlsx');
+  const n=dv.getUint16(e+10,true);let off=dv.getUint32(e+16,true);const files={};
+  for(let i=0;i<n;i++){const nl=dv.getUint16(off+28,true),xl=dv.getUint16(off+30,true),cl=dv.getUint16(off+32,true);
+    files[td.decode(u8.subarray(off+46,off+46+nl))]={method:dv.getUint16(off+10,true),csize:dv.getUint32(off+20,true),lho:dv.getUint32(off+42,true)};off+=46+nl+xl+cl}
+  const get=async name=>{const f=files[name];if(!f)return null;const l=f.lho,s0=l+30+dv.getUint16(l+26,true)+dv.getUint16(l+28,true),d=u8.subarray(s0,s0+f.csize);return td.decode(f.method===0?d:await inflateRaw(d))};
+  const P=x=>new DOMParser().parseFromString(x,'application/xml');
+  const ss=[],sx=await get('xl/sharedStrings.xml');if(sx)P(sx).querySelectorAll('si').forEach(si=>ss.push([...si.getElementsByTagName('t')].map(t=>t.textContent).join('')));
+  let path='xl/worksheets/sheet1.xml';
+  try{const wb=P(await get('xl/workbook.xml')),sh=wb.getElementsByTagName('sheet')[0],rid=sh.getAttribute('r:id'),rel=[...P(await get('xl/_rels/workbook.xml.rels')).getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rid);
+    if(rel){const t=rel.getAttribute('Target');path=t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,'')}}catch(x){}
+  const sheetXml=await get(path);if(!sheetXml)throw new Error('no-sheet');
+  const col=ref=>{let c=0;for(const ch of ref.replace(/\d+/g,''))c=c*26+(ch.charCodeAt(0)-64);return c-1};
+  const rows=[];for(const row of P(sheetXml).getElementsByTagName('row')){const a=[];for(const c of row.getElementsByTagName('c')){const t=c.getAttribute('t'),v=c.getElementsByTagName('v')[0];let val=v?v.textContent:'';
+      if(t==='s')val=ss[+val]||'';else if(t==='inlineStr'){const is=c.getElementsByTagName('t')[0];val=is?is.textContent:''}a[col(c.getAttribute('r')||'A')]=val}rows.push(Array.from(a,x=>x??''))}
+  return rows;
+}
+function parseCsv(text){const rows=[];let row=[],f='',q=false;const sep=(text.split('\n')[0].match(/;/g)||[]).length>(text.split('\n')[0].match(/,/g)||[]).length?';':',';
+  for(let i=0;i<text.length;i++){const ch=text[i];if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+    else if(ch==='"')q=true;else if(ch===sep){row.push(f);f=''}else if(ch==='\n'){row.push(f.replace(/\r$/,''));rows.push(row);row=[];f=''}else f+=ch}
+  if(f||row.length){row.push(f);rows.push(row)}return rows}
+const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function parseExpiry(v){v=String(v||'').trim();if(!v)return'';let m;const pm=(y,mo)=>{y=+y;if(y<100)y+=2000;return mo>=1&&mo<=12&&y>2000&&y<2100?`${y}-${String(mo).padStart(2,'0')}`:''};
+  if(/^\d{5}(\.\d+)?$/.test(v)){const d=new Date(Math.round((+v-25569)*864e5));return pm(d.getUTCFullYear(),d.getUTCMonth()+1)}
+  if(m=v.match(/^(\d{4})[-\/.](\d{1,2})/))return pm(m[1],+m[2]);
+  if(m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))return pm(m[3],+m[2]);
+  if(m=v.match(/^(\d{1,2})[-\/. ](\d{2,4})$/))return pm(m[2],+m[1]);
+  if(m=v.match(/^([a-z]{3})[a-z]*[-\/. ']*(\d{2,4})$/i))return pm(m[2],MON[m[1].toLowerCase()]);
+  return''}
+const IMP_FIELDS=[['name','Medicine name',1,['item','product','medicine','name','description','particular','itemname','productname']],['qty','Quantity (packs)',0,['qty','quantity','stock','closing','balance','bal','qnty','clqty','clstock']],
+  ['batch','Batch',0,['batch','batchno','bno']],['exp','Expiry',0,['exp','expiry','expdate','expirydate']],['mrp','MRP',0,['mrp']],['pur','Purchase rate',0,['purchase','purrate','prate','cost','ptr','rate']],
+  ['gst','GST %',0,['gst','tax','igst','gstrate']],['hsn','HSN',0,['hsn','hsncode']],['company','Company',0,['company','mfg','mfr','manufacturer','make','mfgby']],['pack','Pack',0,['pack','packing','unit','pck']]];
+let IMP=null;
+function guessMap(head){const used=new Set(),map={};const h=head.map(x=>norm(x));
+  for(const[k,,, syn]of IMP_FIELDS){let idx=h.findIndex((x,i)=>!used.has(i)&&syn.some(s=>x===s));if(idx<0)idx=h.findIndex((x,i)=>!used.has(i)&&x&&syn.some(s=>x.startsWith(s)||x.includes(s)));if(idx>=0){map[k]=idx;used.add(idx)}else map[k]=-1}return map}
+function importFormHTML(){return`<h2>Import your stock</h2><p class="note">Upload your stock list from Marg, Excel or any software. Save it as <b>.xlsx</b> or <b>.csv</b> (old .xls files: open in Excel and "Save As" .xlsx). Only the medicine name is required; everything else is optional.</p>
+  <div class="row"><label class="btn pri" style="display:inline-block">Choose file<input id="impfile" type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label><button class="btn" data-act="impTemplate">Download sample sheet</button></div>
+  <div id="impbody"></div>`}
+function drawImport(){const el=$('#impbody');if(!el||!IMP)return;const{head,data,map}=IMP;
+  const opt=k=>`<select data-impk="${k}" id="im_${k}"><option value="-1">— not in file —</option>${head.map((h,i)=>`<option value="${i}" ${map[k]===i?'selected':''}>${esc(h||'Column '+(i+1))}</option>`).join('')}</select>`;
+  const rows=impRows();const nm=rows.filter(r=>r.name).length;
+  el.innerHTML=`<h3>Match your columns</h3><p class="note">We matched these automatically. Fix any that are wrong. ${data.length} rows found.</p>
+  <div class="form">${IMP_FIELDS.map(([k,l,req])=>`<label>${l}${req?' *':''}${opt(k)}</label>`).join('')}</div>
+  <h3>Preview</h3><div class="tw"><table class="t"><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th class="r">Qty</th><th class="r">MRP</th><th class="r">Pur. rate</th><th class="r">GST</th></tr></thead><tbody>${rows.slice(0,6).map(r=>`<tr><td>${esc(r.name)}${r.cat?' <span class="chip">matched</span>':''}</td><td>${esc(r.batch)}</td><td>${r.exp?expF(r.exp):'<span class="sub">—</span>'}</td><td class="r">${r.qty}</td><td class="r">${n2(r.mrp)}</td><td class="r">${n2(r.pur)}</td><td class="r">${r.gst}%</td></tr>`).join('')}</tbody></table></div>
+  <p class="note">${rows.filter(r=>r.cat).length} of ${nm} names matched the medicine database (company, salt and pack are filled from it). Rows without a GST % get 5%. Rows with the same medicine and batch already in your shop get their quantity replaced.</p>
+  <div class="mfoot"><button class="btn pri big" data-act="impGo">Import ${nm} rows</button></div>`;
+  el.querySelectorAll('[data-impk]').forEach(s=>s.addEventListener('change',()=>{IMP.map[s.dataset.impk]=+s.value;drawImport()}))}
+function impRows(){const{data,map}=IMP,g=(r,k)=>map[k]>=0?String(r[map[k]]??'').trim():'',num=v=>{const x=parseFloat(String(v).replace(/[^\d.\-]/g,''));return isFinite(x)?x:0};
+  return data.map(r=>{const name=g(r,'name').toUpperCase().replace(/\s+/g,' ');const c=name?catFind(name):null;const gs=g(r,'gst')===''?5:num(g(r,'gst'));
+    return{name,batch:g(r,'batch').toUpperCase(),exp:parseExpiry(g(r,'exp')),qty:Math.max(0,num(g(r,'qty'))),mrp:num(g(r,'mrp'))||(c?c.mrp:0),pur:num(g(r,'pur')),gst:[0,5,12,18].includes(gs)?gs:5,hsn:g(r,'hsn')||'3004',company:g(r,'company')||(c?c.company:''),pack:g(r,'pack')||(c?c.pack:''),cat:c}})}
+async function loadImportFile(f){
+  try{let rows;if(/\.csv$/i.test(f.name))rows=parseCsv(await f.text());else if(/\.xlsx$/i.test(f.name))rows=await readXlsx(await f.arrayBuffer());
+    else return toast('Please save the file as .xlsx or .csv and try again.');
+    rows=rows.filter(r=>r.some(c=>String(c).trim()));if(rows.length<2)return toast('The file looks empty.');
+    let hi=0,best=-1;rows.slice(0,10).forEach((r,i)=>{const m=guessMap(r),sc=Object.values(m).filter(x=>x>=0).length;if(sc>best){best=sc;hi=i}});
+    const head=rows[hi].map(String);IMP={head,data:rows.slice(hi+1),map:guessMap(head)};
+    if(IMP.map.name<0)IMP.map.name=0;await loadCatalog();drawImport()}
+  catch(e){console.error(e);toast('Could not read that file. Save it as .xlsx or .csv from Excel and try again.')}}
+
+/* ================= CUSTOMERS & SUPPLIERS ================= */
+let ptab='customer',pq='';
+V.parties=()=>`<div class="head"><div><h1>Customers &amp; Suppliers</h1><p class="muted">Track udhaar from customers and dues to distributors.</p></div><button class="btn pri big" data-act="partyForm">+ Add ${ptab==='customer'?'Customer':'Supplier'}</button></div>
+ <div class="card stack"><div class="row" style="justify-content:space-between"><div class="seg"><button data-act="ptab" data-v="customer" class="${ptab==='customer'?'on':''}">Customers</button><button data-act="ptab" data-v="supplier" class="${ptab==='supplier'?'on':''}">Suppliers</button></div>
+  <input id="pq" placeholder="Search name or phone" value="${esc(pq)}" style="max-width:300px" aria-label="Search"></div><div class="tw"><table class="t" id="ptbl"></table></div></div>`;
+AFTER.parties=()=>{$('#pq').addEventListener('input',e=>{pq=e.target.value;drawParties()});drawParties()};
+function remindText(p,b){return`Namaste ${p.name}, your balance at ${S.settings.shop} is ₹${n2(b)}. Please pay at your convenience. Thank you.`}
+function drawParties(){
+  const q=pq.trim().toLowerCase(),list=S.parties.filter(p=>p.type===ptab&&(!q||p.name.toLowerCase().includes(q)||(p.phone||'').includes(q))).map(p=>({p,b:balance(p)})).sort((a,b)=>b.b-a.b);
+  const tot=list.reduce((a,x)=>a+x.b,0);
+  $('#ptbl').innerHTML=list.length?`<thead><tr><th>Name</th><th>Phone</th><th class="r">${ptab==='customer'?'To collect':'To pay'}</th><th></th></tr></thead><tbody>${list.map(({p,b})=>`<tr><td><b>${esc(p.name)}</b><div class="sub">${esc(p.addr||'')}${p.gstin?' · GSTIN '+esc(p.gstin):''}</div></td><td>${esc(p.phone||'')}</td>
+   <td class="r">${b>0?`<span class="chip warn">${money(b)}</span>`:money(b)}</td>
+   <td class="r"><div class="row" style="justify-content:flex-end">${ptab==='customer'&&b>0&&phone91(p.phone)?`<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${phone91(p.phone)}?text=${encodeURIComponent(remindText(p,b))}">WhatsApp reminder</a>`:''}<button class="btn sm pri" data-act="payForm" data-id="${p.id}">${ptab==='customer'?'Receive payment':'Make payment'}</button><button class="btn sm" data-act="ledger" data-id="${p.id}">Ledger</button><button class="btn sm" data-act="partyForm" data-id="${p.id}">Edit</button></div></td></tr>`).join('')}</tbody>
+   <tfoot><tr><td>Total</td><td></td><td class="r">${money(tot)}</td><td></td></tr></tfoot>`
+   :`<tbody><tr><td class="empty">No ${ptab==='customer'?'customers':'suppliers'} yet. ${ptab==='customer'?'They are added automatically when you make a credit bill.':'They are added automatically when you save a purchase.'}</td></tr></tbody>`;
+}
+function partyFormHTML(p){p=p||{type:ptab};return`<h2>${p.id?'Edit':'Add'} ${p.type==='customer'?'customer':'supplier'}</h2>
+ <div class="form"><label class="wide">Name<input id="f_pname" value="${esc(p.name||'')}"></label><label>Phone<input id="f_pphone" inputmode="tel" value="${esc(p.phone||'')}"></label>
+ <label class="wide">Address<input id="f_paddr" value="${esc(p.addr||'')}"></label><label>GSTIN${p.type==='customer'?' (for B2B bills)':''}<input id="f_pgst" value="${esc(p.gstin||'')}" maxlength="15"></label>
+ <label>Opening balance (₹)<input id="f_popen" type="number" step="0.01" value="${p.opening??''}" placeholder="0"></label></div>
+ <p class="note">Opening balance is the amount ${p.type==='customer'?'this customer already owed you':'you already owed this supplier'} before you started using this app.</p>
+ <div class="mfoot"><button class="btn pri" data-act="saveParty" data-id="${p.id||''}" data-type="${p.type}">Save</button></div>`}
+function ledgerRows(p){
+  const e=[];if(+p.opening)e.push({date:'',d:'Opening balance',a:+p.opening,c:0});
+  if(p.type==='customer'){S.sales.filter(s=>s.partyId===p.id&&!s.cancelled).forEach(s=>{e.push({date:s.date,d:'Bill '+s.no,a:s.total,c:0});if(s.paid)e.push({date:s.date,d:'Paid with bill '+s.no,a:0,c:s.paid})});
+    S.returns.filter(r=>r.partyId===p.id&&r.mode==='credit').forEach(r=>e.push({date:r.date,d:`Return ${r.no} (bill ${r.saleNo})`,a:0,c:r.total}))}
+  else S.purchases.filter(x=>x.partyId===p.id).forEach(x=>{e.push({date:x.date,d:'Purchase bill '+(x.inv||''),a:x.total,c:0});if(x.paid)e.push({date:x.date,d:'Paid with bill '+(x.inv||''),a:0,c:x.paid})});
+  S.payments.filter(x=>x.partyId===p.id).forEach(x=>e.push({date:x.date,d:'Payment ('+x.mode+')'+(x.note?' · '+x.note:''),a:0,c:+x.amount}));
+  e.sort((x,y)=>x.date.localeCompare(y.date));let bal=0;e.forEach(r=>{bal+=r.a-r.c;r.bal=bal});return e;
+}
+function ledgerHTML(p,forPrint){const e=ledgerRows(p);
+  return`${forPrint?`<div class="inv" style="padding:10px"><div class="shop">${esc(S.settings.shop)}</div><div>${esc(S.settings.addr)}</div><h3 style="margin:10px 0">Account statement: ${esc(p.name)}</h3>`:`<h2>${esc(p.name)}</h2><p class="note">${p.type==='customer'?'Bills, returns and payments received':'Purchases and payments made'}</p>`}
+  <div class="tw"><table class="t"><thead><tr><th>Date</th><th>Details</th><th class="r">Bill amount</th><th class="r">Paid / credit</th><th class="r">Balance</th></tr></thead><tbody>${e.map(r=>`<tr><td>${dmy(r.date)}</td><td>${esc(r.d)}</td><td class="r">${r.a?n2(r.a):''}</td><td class="r">${r.c?n2(r.c):''}</td><td class="r">${n2(r.bal)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No entries yet.</td></tr>'}</tbody>
+  <tfoot><tr><td></td><td>Balance</td><td></td><td></td><td class="r">${money(balance(p))}</td></tr></tfoot></table></div>${forPrint?'</div>':''}`}
+
+/* ================= REPORTS ================= */
+let rtab='sales',rfrom=today().slice(0,8)+'01',rto=today();
+const RTABS=[['sales','Sales'],['day','Day close'],['returns','Returns'],['purch','Purchases'],['gst','GST'],['h1','H1 register'],['expiry','Expiry'],['low','Low stock'],['log','Activity']];
+V.reports=()=>`<div class="head"><div><h1>Reports</h1></div>
+ <div class="row"><label>From<input id="r_from" type="date" value="${rfrom}"></label><label>To${rtab==='day'?' (day to close)':''}<input id="r_to" type="date" value="${rto}"></label></div></div>
+ <div class="card stack"><div class="seg">${RTABS.map(([k,l])=>`<button data-act="rtab" data-v="${k}" class="${rtab===k?'on':''}">${l}</button>`).join('')}</div>
+ <div id="rbody"></div></div>`;
+AFTER.reports=()=>{$('#r_from').addEventListener('change',e=>{rfrom=e.target.value;drawReport()});$('#r_to').addEventListener('change',e=>{rto=e.target.value;drawReport()});drawReport()};
+const inRange=d=>d>=rfrom&&d<=rto;
+function gstOfReturn(r){const s=S.sales.find(x=>x.id===r.saleId),g={};if(!s)return g;r.items.forEach(ri=>{const it=s.items[ri.idx];if(!it)return;const tx=ri.amt/(1+it.gst/100),k=it.gst;g[k]=g[k]||{tx:0,tax:0};g[k].tx+=tx;g[k].tax+=ri.amt-tx});return g}
+function drawReport(){
+  let h='';
+  if(rtab==='sales'){const l=S.sales.filter(s=>inRange(s.date)).reverse(),ok=l.filter(s=>!s.cancelled);
+    const profit=ok.reduce((a,s)=>a+s.items.reduce((x,i)=>{const amt=lineAmt(i)*saleFactor(s);return x+amt/(1+i.gst/100)-(i.pur||0)*packs(i)},0),0);
+    const sum=t=>ok.filter(s=>s.type===t).reduce((a,s)=>a+s.total,0);
+    h=`<p class="note">${ok.length} bills · Sales ${money(ok.reduce((a,s)=>a+s.total,0))} · Cash ${money(sum('Cash'))} · UPI ${money(sum('UPI'))} · Credit ${money(sum('Credit'))} · Approx. profit ${money(profit)} (before tax, before returns)</p>
+    ${l.length?`<div class="tw"><table class="t"><thead><tr><th>Bill no.</th><th>Date</th><th>Customer</th><th>Type</th><th class="r">Total</th><th class="r">Paid</th><th></th></tr></thead><tbody>${l.map(s=>`<tr class="${s.cancelled?'cancel':''}"><td>${esc(s.no)}</td><td>${dmy(s.date)}</td><td>${esc(s.name)}</td><td>${s.cancelled?'Cancelled':s.type}${S.returns.some(r=>r.saleId===s.id)?' <span class="chip warn">Return</span>':''}</td><td class="r">${n2(s.total)}</td><td class="r">${n2(s.paid)}</td>
+     <td class="r"><button class="btn sm" data-act="viewBill" data-id="${s.id}">Open</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No bills in these dates.</div>'}`}
+  if(rtab==='day'){const d=rto,ss=S.sales.filter(s=>s.date===d&&!s.cancelled),sum=t=>ss.filter(s=>s.type===t).reduce((a,s)=>a+s.total,0);
+    const creditPaidNow=ss.filter(s=>s.type==='Credit').reduce((a,s)=>a+(+s.paid||0),0);
+    const custPays=S.payments.filter(x=>x.date===d&&(party(x.partyId)||{}).type==='customer'),suppPays=S.payments.filter(x=>x.date===d&&(party(x.partyId)||{}).type==='supplier');
+    const byMode=(arr,m)=>arr.filter(x=>x.mode===m).reduce((a,x)=>a+(+x.amount||0),0);
+    const refunds=S.returns.filter(r=>r.date===d&&r.mode==='cash').reduce((a,r)=>a+r.total,0);
+    const purCash=S.purchases.filter(p=>p.date===d).reduce((a,p)=>a+(+p.paid||0),0);
+    const cashIn=sum('Cash')+creditPaidNow+byMode(custPays,'Cash'),cashOut=refunds+byMode(suppPays,'Cash')+purCash;
+    const L=(k,v,b)=>`<tr><td>${b?'<b>'+k+'</b>':k}</td><td class="r">${b?'<b>'+money(v)+'</b>':money(v)}</td></tr>`;
+    h=`<h3>Day close for ${dmy(d)} · ${ss.length} bills</h3><div class="two"><div class="tw"><table class="t"><tbody>
+      ${L('Cash bills',sum('Cash'))}${L('Paid now on credit bills',creditPaidNow)}${L('Udhaar collected in cash',byMode(custPays,'Cash'))}${L('Cash refunds for returns',-refunds)}${L('Paid to suppliers in cash',-(byMode(suppPays,'Cash')+purCash))}${L('Cash in drawer should be (plus your opening cash)',cashIn-cashOut,1)}
+     </tbody></table></div><div class="tw"><table class="t"><tbody>
+      ${L('UPI bills',sum('UPI'))}${L('Udhaar collected by UPI / bank',byMode(custPays,'UPI')+byMode(custPays,'Bank')+byMode(custPays,'Cheque'))}${L('New udhaar given',sum('Credit')-creditPaidNow)}${L('Total sales',ss.reduce((a,s)=>a+s.total,0),1)}
+     </tbody></table></div></div><p class="note">Pick the day with the "To" date above. Count your drawer and compare it with the first table.</p>`}
+  if(rtab==='returns'){const l=S.returns.filter(r=>inRange(r.date)).reverse();
+    h=l.length?`<div class="tw"><table class="t"><thead><tr><th>Credit note</th><th>Date</th><th>Bill</th><th>Customer</th><th>Refund</th><th class="r">Amount</th></tr></thead><tbody>${l.map(r=>`<tr><td>${esc(r.no)}</td><td>${dmy(r.date)}</td><td>${esc(r.saleNo)}</td><td>${esc(r.name)}</td><td>${r.mode==='cash'?'Cash refund':'Reduced udhaar'}</td><td class="r">${n2(r.total)}</td></tr>`).join('')}</tbody>
+     <tfoot><tr><td>Total</td><td></td><td></td><td></td><td></td><td class="r">${n2(l.reduce((a,r)=>a+r.total,0))}</td></tr></tfoot></table></div>`:'<div class="empty">No returns in these dates. Open a bill and press "Return items" to make one.</div>'}
+  if(rtab==='purch'){const l=S.purchases.filter(p=>inRange(p.date)).reverse();
+    h=l.length?`<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Supplier</th><th>Bill no.</th><th class="r">Items</th><th class="r">Taxable</th><th class="r">GST</th><th class="r">Total</th></tr></thead><tbody>${l.map(p=>`<tr><td>${dmy(p.date)}</td><td>${esc((party(p.partyId)||{}).name)}</td><td>${esc(p.inv)}</td><td class="r">${p.rows.length}</td><td class="r">${n2(p.base)}</td><td class="r">${n2(p.tax)}</td><td class="r">${n2(p.total)}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td>Total</td><td></td><td></td><td></td><td class="r">${n2(l.reduce((a,p)=>a+p.base,0))}</td><td class="r">${n2(l.reduce((a,p)=>a+p.tax,0))}</td><td class="r">${n2(l.reduce((a,p)=>a+p.total,0))}</td></tr></tfoot></table></div>`:'<div class="empty">No purchases in these dates.</div>'}
+  if(rtab==='gst'){
+    const ss=S.sales.filter(s=>inRange(s.date)&&!s.cancelled),rs=S.returns.filter(r=>inRange(r.date));
+    if(!gstOn()){const turn=ss.reduce((a,s)=>a+s.total,0)-rs.reduce((a,r)=>a+r.total,0);
+      h=`<p style="font-size:17px;margin:0">Turnover for these dates: <b>${money(turn)}</b></p><p class="note">${S.settings.gstType==='composition'?'You are set as a composition dealer: you pay tax on turnover each quarter (CMP-08) and do not charge GST on bills. The rate for traders is usually 1%; confirm with your CA.':'You are set as not registered for GST, so no GST is charged or reported. Change this in Settings if you register.'}</p>`}
+    else{
+    const add=(o,g,sign)=>Object.entries(g||{}).forEach(([r,v])=>{o[r]=o[r]||{tx:0,tax:0};o[r].tx+=sign*v.tx;o[r].tax+=sign*v.tax});
+    const b2c={},pi={},b2b=[];
+    ss.forEach(s=>{const p=party(s.partyId);if(p&&p.gstin)b2b.push({s,p});else add(b2c,s.gst,1)});
+    rs.forEach(r=>add(b2c,gstOfReturn(r),-1));
+    S.purchases.filter(p=>inRange(p.date)).forEach(p=>p.rows.forEach(r=>{const l=purLine(r),k=+r.gst;pi[k]=pi[k]||{tx:0,tax:0};pi[k].tx+=l.base;pi[k].tax+=l.tax}));
+    const tb=(o,t)=>{const rr=Object.keys(o).sort((a,b)=>a-b);const T=rr.reduce((a,r)=>({tx:a.tx+o[r].tx,tax:a.tax+o[r].tax}),{tx:0,tax:0});
+      return`<h3>${t}</h3><div class="tw"><table class="t"><thead><tr><th>GST rate</th><th class="r">Taxable value</th><th class="r">CGST</th><th class="r">SGST</th><th class="r">Total GST</th></tr></thead><tbody>${rr.map(r=>`<tr><td>${r}%</td><td class="r">${n2(o[r].tx)}</td><td class="r">${n2(o[r].tax/2)}</td><td class="r">${n2(o[r].tax/2)}</td><td class="r">${n2(o[r].tax)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nothing in these dates.</td></tr>'}</tbody>
+      <tfoot><tr><td>Total</td><td class="r">${n2(T.tx)}</td><td class="r">${n2(T.tax/2)}</td><td class="r">${n2(T.tax/2)}</td><td class="r">${n2(T.tax)}</td></tr></tfoot></table></div>`};
+    const b2bTax=b2b.reduce((a,{s})=>a+Object.values(s.gst).reduce((x,v)=>x+v.tax,0),0);
+    const out=Object.values(b2c).reduce((a,v)=>a+v.tax,0)+b2bTax,inp=Object.values(pi).reduce((a,v)=>a+v.tax,0);
+    h=`<h3>B2B sales (customers with GSTIN)</h3>${b2b.length?`<div class="tw"><table class="t"><thead><tr><th>Bill</th><th>Date</th><th>Customer</th><th>GSTIN</th><th class="r">Taxable</th><th class="r">GST</th><th class="r">Total</th></tr></thead><tbody>${b2b.map(({s,p})=>{const tx=Object.values(s.gst).reduce((a,v)=>a+v.tx,0);return`<tr><td>${esc(s.no)}</td><td>${dmy(s.date)}</td><td>${esc(p.name)}</td><td>${esc(p.gstin)}</td><td class="r">${n2(tx)}</td><td class="r">${n2(s.total-s.ro-tx)}</td><td class="r">${n2(s.total)}</td></tr>`}).join('')}</tbody></table></div>`:'<p class="note">No B2B bills in these dates. Add a GSTIN to a customer to bill them as B2B.</p>'}
+      ${tb(b2c,'B2C sales by rate (after returns)')}${tb(pi,'Purchases (input GST credit)')}<p style="font-size:17px;margin:0">Estimated GST payable: <b>${money(Math.max(0,out-inp))}</b>${inp>out?` · credit carried forward ${money(inp-out)}`:''}</p><p class="note">For GSTR-1 and GSTR-3B. Please confirm with your accountant before filing.</p>`}}
+  if(rtab==='h1'){const rows=[];S.sales.filter(s=>inRange(s.date)&&!s.cancelled).forEach(s=>s.items.forEach(i=>{if(i.sched==='H1'||i.sched==='X')rows.push({s,i})}));
+    h=rows.length?`<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Bill</th><th>Patient</th><th>Doctor</th><th>Medicine</th><th>Batch</th><th class="r">Qty</th></tr></thead><tbody>${rows.map(({s,i})=>`<tr><td>${dmy(s.date)}</td><td>${esc(s.no)}</td><td>${esc(s.name)}</td><td>${esc(s.doctor)}</td><td>${esc(i.name)} <span class="chip warn">${i.sched}</span></td><td>${esc(i.batch)}</td><td class="r">${qtyLabel(i)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="row"><button class="btn" data-act="printH1">Print register</button><span class="note">Keep this register for the drug inspector. Schedule H1 bills need the patient and doctor name.</span></div>`:'<div class="empty">No Schedule H1 or X medicines sold in these dates.</div>'}
+  if(rtab==='expiry'){const l=expiryList();
+    h=l.length?`<div class="tw"><table class="t"><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th class="r">Qty</th><th class="r">Value (pur. rate)</th></tr></thead><tbody>${l.map(b=>{const m=med(b.medId);return`<tr><td>${esc(m?m.name:'')}</td><td>${esc(b.batch)}</td><td><span class="chip ${isExpired(b.exp)?'bad':'warn'}">${isExpired(b.exp)?'Expired ':''}${expF(b.exp)}</span></td><td class="r">${fmtStock(b.qty,m)}</td><td class="r">${n2(b.qty*(b.pur||0))}</td></tr>`}).join('')}</tbody>
+    <tfoot><tr><td>Total</td><td></td><td></td><td></td><td class="r">${n2(l.reduce((a,b)=>a+b.qty*(b.pur||0),0))}</td></tr></tfoot></table></div><p class="note">Expired batches are blocked from billing. Return them to the supplier and set their quantity to 0 in Medicines.</p>`:'<div class="empty">No batches expiring in the next 3 months.</div>'}
+  if(rtab==='low'){const l=lowStock();
+    h=l.length?`<div class="tw"><table class="t"><thead><tr><th>Medicine</th><th>Company</th><th class="r">In stock</th><th class="r">Reorder level</th></tr></thead><tbody>${l.map(m=>{const s=stockOf(m.id);return`<tr><td>${esc(m.name)}<div class="sub">${esc(m.pack)}</div></td><td>${esc(m.company)}</td><td class="r">${s>0?fmtStock(s,m):'<span class="chip bad">0</span>'}</td><td class="r">${m.min||0}</td></tr>`}).join('')}</tbody></table></div><p class="note">Use this as your order list (shortbook) for the distributor.</p>`:'<div class="empty">Nothing to reorder.</div>'}
+  if(rtab==='log'){const l=[...(S.log||[])].reverse().slice(0,200);
+    h=l.length?`<div class="tw"><table class="t"><thead><tr><th>When</th><th>What happened</th></tr></thead><tbody>${l.map(e=>`<tr><td class="sub" style="white-space:nowrap">${new Date(e.t).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td>${esc(e.text)}</td></tr>`).join('')}</tbody></table></div><p class="note">Bill edits, cancellations, returns, stock corrections and setting changes are recorded here.</p>`:'<div class="empty">Nothing recorded yet.</div>'}
+  $('#rbody').innerHTML=h;
+}
+
+/* ================= SETTINGS ================= */
+V.settings=()=>{const s=S.settings,used=maxBillNo(s.prefix);return`<div class="head"><div><h1>Settings</h1><p class="muted">These details print on every bill.</p></div></div>
+ <div class="stack">
+ <div class="card stack"><h3>Shop details</h3><div class="form">
+  <label class="wide">Shop name<input id="s_shop" value="${esc(s.shop)}"></label><label class="wide">Address<input id="s_addr" value="${esc(s.addr)}"></label>
+  <label>Phone<input id="s_phone" value="${esc(s.phone)}"></label>
+  <label class="wide">GST type<select id="s_gstType">${[['regular','Regular GST (tax invoice)'],['composition','Composition dealer (bill of supply)'],['unregistered','Not registered for GST']].map(([v,l])=>`<option value="${v}" ${s.gstType===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label>GSTIN<input id="s_gstin" value="${esc(s.gstin)}" maxlength="15" placeholder="03ABCDE1234F1Z5"></label>
+  <label class="wide">Drug licence no.<input id="s_dl" value="${esc(s.dl)}" placeholder="20B / 21B numbers"></label>
+  <label>Bill title<select id="s_title">${[['auto','Auto (from GST type)'],['TAX INVOICE','TAX INVOICE'],['BILL OF SUPPLY','BILL OF SUPPLY'],['ESTIMATE','ESTIMATE'],['CASH MEMO','CASH MEMO']].map(([v,l])=>`<option value="${v}" ${s.title===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label>Printer / paper<select id="s_paper">${[['A5','A5 sheet'],['A4','A4 sheet'],['80mm','Thermal 3 inch (80 mm)'],['58mm','Thermal 2 inch (58 mm)']].map(([v,l])=>`<option value="${v}" ${s.paper===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label>Bill no. prefix<input id="s_prefix" value="${esc(s.prefix)}"></label><label>Next bill no.<input id="s_nextNo" type="number" min="${used+1}" value="${s.nextNo}"></label>
+  <label class="wide">Stock tracking<select id="s_stock"><option value="track" ${(s.stock||'track')==='track'?'selected':''}>Billing + stock (batches, expiry, alerts)</option><option value="billing" ${s.stock==='billing'?'selected':''}>Billing only (no stock to manage)</option></select></label>
+  <label>Theme<select id="s_theme">${Object.entries(THEME_LABEL).map(([v,l])=>`<option value="${v}" ${(s.theme||'auto')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label>Text size on screen<select id="s_large"><option value="">Normal</option><option value="1" ${s.large?'selected':''}>Large (easier to read)</option></select></label>
+  <label class="wide">Footer note on bill<input id="s_footer" value="${esc(s.footer)}"></label></div>
+  <p class="note">Bill numbers can only move forward${used?` (the last bill used no. ${used})`:''}, so two bills never share a number.</p>
+  <div><button class="btn pri" data-act="saveSettings">Save settings</button></div></div>
+ <div class="card stack"><h3>Backup</h3>
+  <p class="note">Your records are kept in this browser on this computer, with a copy of each of the last 7 days. For safety, also keep a copy outside the browser.</p>
+  <div class="row"><button class="btn pri" data-act="pickFolder">${dirHandle?'Change auto backup folder':'Set up auto backup folder'}</button><span class="note">${dirHandle?(backupState==='on'?'Auto backup is on. A file is saved to your folder after every change, one file per day.':'Auto backup is paused. Press "Resume backup" in the menu.'):'Chrome or Edge on a computer: choose a folder (a pen drive or your Google Drive folder works well) and a backup file is saved there automatically.'}</span></div>
+  <div class="row"><button class="btn" data-act="backup">Download backup now</button><label class="btn" style="display:inline-block">Restore from backup file<input id="restore" type="file" accept=".json,application/json" hidden></label><span class="note">Last backup: ${timeAgo(lastBackup)}</span></div>
+  <h3 style="margin-top:6px">Daily copies in this browser</h3><div id="snaps" class="note">Loading…</div></div>
+ <div class="card stack"><h3>Start fresh</h3><p class="note">Deletes all medicines, bills, customers and purchases. Shop details are kept. Download a backup first.</p><div><button class="btn danger" data-act="wipe">Delete all data</button></div></div>
+ </div>`};
+AFTER.settings=()=>{
+  $('#restore').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.meds||!d.sales)throw 0;S=d;migrate();logEv('Data restored from backup file '+f.name);save();render();toast('Backup restored.')}catch(x){toast('That file is not a Pharmacy Counter backup.')}};r.readAsText(f)});
+  (async()=>{const el=$('#snaps');if(!el)return;if(!idb){el.textContent='Not available in this browser.';return}
+    try{const keys=(await idbKeys()).map(String).filter(k=>k.startsWith('snap-')).sort().reverse();
+      el.innerHTML=keys.length?`<div class="tw"><table class="t"><tbody>${keys.map(k=>`<tr><td>Start of ${dmy(k.slice(5))}</td><td class="r"><button class="btn sm" data-act="restoreSnap" data-k="${k}">Restore this day</button></td></tr>`).join('')}</tbody></table></div>`:'No daily copies yet.'}catch(e){el.textContent='Could not read daily copies.'}})();
+};
+
+/* ================= BILL PRINT ================= */
+function billTitle(){const st=S.settings;if(st.title!=='auto')return st.title;return st.gstType==='composition'?'BILL OF SUPPLY':st.gstType==='unregistered'?'CASH MEMO':(st.gstin?'TAX INVOICE':'ESTIMATE')}
+function invoiceHTML(s){
+  const st=S.settings,p=party(s.partyId),showGst=gstOn();
+  if(st.paper==='80mm'||st.paper==='58mm')return receiptHTML(s);
+  const gst=Object.entries(s.gst||{}).filter(([,v])=>v.tax>0.001).sort((a,b)=>a[0]-b[0]);
+  const curr=(s.prevBal||0)+s.total-(s.paid||0);
+  return`<div class="inv">
+  <div class="ih"><div><div class="shop">${esc(st.shop)}</div><div>${esc(st.addr)}</div><div>${st.phone?'Ph: '+esc(st.phone):''}${st.gstin?' &nbsp;|&nbsp; GSTIN: '+esc(st.gstin):''}${st.dl?' &nbsp;|&nbsp; D.L. No: '+esc(st.dl):''}</div></div>
+   <div class="ttl">${esc(billTitle())}<small>( ${s.type.toUpperCase()} )</small></div></div>
+  <div class="im"><div>Patient : <b>${esc(s.name.toUpperCase())}</b>${s.phone?'<br>Phone : '+esc(s.phone):''}${p&&p.gstin?'<br>Customer GSTIN : '+esc(p.gstin):''}${s.doctor?'<br>Dr. : '+esc(s.doctor):''}</div><div class="r">Bill No : <b>${esc(s.no)}</b><br>Date : ${dmy(s.date)}</div></div>
+  <table class="it"><thead><tr><th>Sr</th><th class="l">Product</th>${showGst?'<th class="l">HSN</th>':''}<th class="l">Batch</th><th>Exp</th><th>Qty</th><th>MRP</th><th>Rate</th><th>Dis%</th>${showGst?'<th>GST%</th>':''}<th>Amount</th></tr></thead><tbody>
+  ${s.items.map((it,i)=>`<tr><td>${i+1}</td><td class="l">${esc(it.name)}${it.sched?' *'+it.sched:''}</td>${showGst?`<td class="l">${esc(it.hsn||'')}</td>`:''}<td class="l">${esc(it.batch)}</td><td>${expF(it.exp)}</td><td>${qtyLabel(it)}</td><td>${n2(it.mrp)}</td><td>${n2(it.rate)}</td><td>${it.disc?n2(it.disc):''}</td>${showGst?`<td>${it.gst}</td>`:''}<td>${n2(lineAmt(it))}</td></tr>`).join('')}
+  <tr class="fill" style="--fh:${Math.max(20,180-s.items.length*16)}px">${'<td></td>'.repeat(showGst?11:9)}</tr></tbody></table>
+  <div class="iw">${words(s.total)}</div>
+  <div class="if"><div>${showGst&&gst.length?`<table class="gt"><thead><tr><th>GST%</th><th>Taxable</th><th>CGST</th><th>SGST</th></tr></thead><tbody>${gst.map(([r,v])=>`<tr><td>${r}</td><td>${n2(v.tx)}</td><td>${n2(v.tax/2)}</td><td>${n2(v.tax/2)}</td></tr>`).join('')}</tbody></table>`:''}
+    ${st.gstType==='composition'?'<div style="margin-top:4px">Composition taxable person, not eligible to collect tax on supplies.</div>':''}
+    ${s.partyId&&(s.type==='Credit'||s.prevBal)?`<div style="margin-top:6px">Prev. Bal : ${n2(s.prevBal)} &nbsp; Paid : ${n2(s.paid)}<br><b>Curr. Bal : ${n2(curr)}</b></div>`:''}</div>
+   <div class="tot"><span>Sub Total :</span><span>${n2(s.sub)}</span><span>Discount :</span><span>${n2(s.disc)}</span><span>Round Off :</span><span>${n2(s.ro)}</span><span class="g">Grand Total :</span><span class="g">${n2(s.total)}</span></div></div>
+  <div class="is"><div>${esc(st.footer)}</div><div style="text-align:center;white-space:nowrap">For ${esc(st.shop)}<br><br>Authorised Signatory</div></div></div>`;
+}
+function receiptHTML(s){
+  const st=S.settings,p=party(s.partyId),gst=Object.entries(s.gst||{}).filter(([,v])=>v.tax>0.001),curr=(s.prevBal||0)+s.total-(s.paid||0);
+  return`<div class="rc ${st.paper==='58mm'?'w58':''}"><div class="c"><div class="sh">${esc(st.shop)}</div><div>${esc(st.addr)}</div>${st.phone?`<div>Ph: ${esc(st.phone)}</div>`:''}${st.gstin?`<div>GSTIN: ${esc(st.gstin)}</div>`:''}${st.dl?`<div>DL: ${esc(st.dl)}</div>`:''}<div style="margin-top:3px"><b>${esc(billTitle())}</b> (${s.type.toUpperCase()})</div></div><hr>
+  <div class="ln"><span>Bill: ${esc(s.no)}</span><span>${dmy(s.date)}</span></div><div>Patient: ${esc(s.name)}</div>${p&&p.gstin?`<div>GSTIN: ${esc(p.gstin)}</div>`:''}${s.doctor?`<div>Dr: ${esc(s.doctor)}</div>`:''}<hr>
+  ${s.items.map(it=>`<div><b>${esc(it.name)}</b></div><div class="ln s"><span>${esc(it.batch)} · ${expF(it.exp)} · ${qtyLabel(it)} × ${n2(it.rate)}${it.disc?' -'+it.disc+'%':''}</span><span>${n2(lineAmt(it))}</span></div>`).join('')}<hr>
+  <div class="ln"><span>Sub total</span><span>${n2(s.sub)}</span></div>${s.disc?`<div class="ln"><span>Discount</span><span>-${n2(s.disc)}</span></div>`:''}<div class="ln"><span>Round off</span><span>${n2(s.ro)}</span></div>
+  <div class="ln g"><span>TOTAL</span><span>₹${n2(s.total)}</span></div>
+  ${gstOn()&&gst.length?`<div class="s">${gst.map(([r,v])=>`GST ${r}%: taxable ${n2(v.tx)}, CGST ${n2(v.tax/2)}, SGST ${n2(v.tax/2)}`).join('<br>')}</div>`:''}
+  ${s.partyId&&(s.type==='Credit'||s.prevBal)?`<hr><div class="ln"><span>Prev. bal</span><span>${n2(s.prevBal)}</span></div><div class="ln"><span>Paid</span><span>${n2(s.paid)}</span></div><div class="ln"><b>Curr. bal</b><b>${n2(curr)}</b></div>`:''}
+  <hr><div class="c s">${esc(st.footer)}</div></div>`;
+}
+function waText(s){const st=S.settings,curr=(s.prevBal||0)+s.total-(s.paid||0);let t=`*${st.shop}*\nBill ${s.no} · ${dmy(s.date)}\n\n`;
+  s.items.forEach(i=>t+=`${i.name} × ${qtyLabel(i)} = ₹${n2(lineAmt(i))}\n`);if(s.disc)t+=`Discount: -₹${n2(s.disc)}\n`;
+  t+=`\n*Total: ₹${n2(s.total)}*\n`;if(s.partyId&&s.type==='Credit')t+=`Balance due: ₹${n2(curr)}\n`;return t+`\n${st.footer}`}
+function showBill(id,fresh){const s=S.sales.find(x=>x.id===id);if(!s)return;
+  const hasRet=S.returns.some(r=>r.saleId===s.id),ph=phone91(s.phone||(party(s.partyId)||{}).phone);
+  modal(`<div class="row" style="justify-content:space-between;padding-right:30px">${fresh?`<div class="banner info" style="margin:0 30px 0 0"><span><b>Saved.</b> Bill ${esc(s.no)} for ${money(s.total)}${s.type==='Credit'?' added to udhaar':''}.</span></div>`:''}<h2>Bill ${esc(s.no)}${s.cancelled?' <span class="chip bad">Cancelled</span>':''}${hasRet?' <span class="chip warn">Has returns</span>':''}</h2>
+   <div class="row">${fresh?'<button class="btn pri" data-act="close">Next bill (Enter)</button>':''}<button class="btn ${fresh?'':'pri'}" data-act="print" data-id="${id}">Print</button>${ph?`<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${ph}?text=${encodeURIComponent(waText(s))}">Send on WhatsApp</a>`:''}</div></div>
+   ${s.cancelled?'':`<div class="row"><button class="btn sm" data-act="editBill" data-id="${id}" ${hasRet?'disabled title="Bills with returns cannot be edited"':''}>Edit bill</button><button class="btn sm" data-act="returnForm" data-id="${id}">Return items</button><button class="btn sm danger" data-act="cancelBill" data-id="${id}">Cancel bill</button>${hasRet?'<span class="note">Bills with returns cannot be edited or cancelled.</span>':''}</div>`}
+   <div class="paper">${invoiceHTML(s)}</div>`,true)}
+function doPrint(html){
+  const p=S.settings.paper;$('#printArea').innerHTML=html;
+  $('#pagesize').textContent=p==='A4'||p==='A5'?`@page{size:${p} portrait;margin:7mm}`:'@page{margin:2mm}';
+  if(inFrame){saveFile('bill-print.html',printableDoc(html),'text/html').then(ok=>{if(ok)toast('Bill saved. Open the file: the print window opens by itself.')});return}
+  setTimeout(()=>{try{window.print()}catch(e){}},60);
+}
+function returnFormHTML(s){
+  return`<h2>Return items from bill ${esc(s.no)}</h2><p class="note">Enter how many of each item came back. Stock goes back to the same batch.</p>
+  <div class="tw"><table class="t"><thead><tr><th>Medicine</th><th class="r">Sold</th><th class="r">Already returned</th><th class="r">Return now</th></tr></thead><tbody>${s.items.map((it,i)=>{const done=returnedQty(s,i),left=it.qty-done;
+    return`<tr><td>${esc(it.name)}<div class="sub">Batch ${esc(it.batch)} · ${n2(it.rate)} each</div></td><td class="r">${qtyLabel(it)}</td><td class="r">${done}</td><td class="r"><input id="rq_${i}" data-idx="${i}" type="number" min="0" max="${left}" step="1" value="0" style="width:80px" ${left<=0?'disabled':''} aria-label="Return quantity"></td></tr>`}).join('')}</tbody></table></div>
+  <div class="form"><label>Refund<select id="r_mode">${s.partyId&&s.type==='Credit'?'<option value="credit">Reduce udhaar balance</option><option value="cash">Cash refund</option>':'<option value="cash">Cash refund</option>'+(s.partyId?'<option value="credit">Reduce udhaar balance</option>':'')}</select></label><label>Date<input id="r_date" type="date" max="${today()}" value="${today()}"></label></div>
+  <div class="mfoot"><button class="btn pri" data-act="saveReturn" data-id="${s.id}">Save return</button></div>`}
+
+/* ================= actions ================= */
+const A={
+  close:()=>{closeModal();if(view==='bill')$('#medsearch')?.focus()},
+  importForm:()=>{IMP=null;modal(importFormHTML(),true);$('#impfile').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadImportFile(f)})},
+  impTemplate:()=>{const csv='Medicine name,Batch,Expiry,Quantity,MRP,Purchase rate,GST %,HSN,Company,Pack\nDOLO 650 TABLET,DOBS4521,03/2028,40,30.91,20.40,5,3004,Micro Labs,15 TAB\nPAN 40 TABLET,PN2408,07/2028,12,183,118,5,3004,Alkem,15 TAB\n';
+    saveFile('stock-import-sample.csv',csv,'text/csv')},
+  impGo:()=>{const rows=impRows().filter(r=>r.name);let newM=0,newB=0,upd=0;
+    rows.forEach(r=>{let m=S.meds.find(x=>norm(x.name)===norm(r.name));
+      if(!m){const c=r.cat;m={id:uid(),name:r.name,company:r.company,pack:r.pack,units:c?c.units:guessUnits(r.pack),salt:c?c.salt:'',barcode:'',hsn:r.hsn,gst:r.gst,mrp:r.mrp,min:0,sched:''};S.meds.push(m);newM++}
+      else{if(r.mrp)m.mrp=r.mrp;if(r.company&&!m.company)m.company=r.company;if(r.pack&&!m.pack)m.pack=r.pack}
+      if(r.qty>0||r.batch){const bn=r.batch||'OPENING';let b=S.batches.find(x=>x.medId===m.id&&x.batch===bn);
+        if(b){b.qty=r4(r.qty);if(r.exp)b.exp=r.exp;if(r.mrp)b.mrp=r.mrp;if(r.pur)b.pur=r.pur;upd++}
+        else{S.batches.push({id:uid(),medId:m.id,batch:bn,exp:r.exp,qty:r4(r.qty),mrp:r.mrp||m.mrp,pur:r.pur,sale:r.mrp||m.mrp});newB++}}});
+    logEv(`Stock imported: ${rows.length} rows, ${newM} new medicines, ${newB} new batches, ${upd} batches updated`);save();closeModal();IMP=null;render();
+    toast(`Imported ${rows.length} rows: ${newM} new medicines, ${newB} batches added, ${upd} updated.`)},
+  quickAdd:()=>{const n=$('#medsearch').value.trim().toUpperCase();modal(medFormHTML(null),true);bindMedForm();$('#f_name').value=n;$('#f_pack').focus()},
+  repeatLast:()=>{const last=lastSaleOf(bill.name);if(!last)return;let miss=[];
+    last.items.forEach(i=>{const m=med(i.medId);if(!m){miss.push(i.name);return}
+      if(billingOnly()){bill.items.push({medId:m.id,batchId:null,nostock:true,batchTxt:'',exp:'',qty:i.qty,loose:!!i.loose,mrp:i.loose?r4(m.mrp/(m.units||1)):m.mrp,rate:i.loose?r2(m.mrp/(m.units||1)):m.mrp,disc:i.disc||'',gst:m.gst});return}const bs=S.batches.filter(b=>b.medId===m.id&&avail(b)>0&&!isExpired(b.exp)).sort((a,b)=>(a.exp||'9999').localeCompare(b.exp||'9999'));
+      if(!bs.length){miss.push(m.name);return}const u=m.units||1,b=bs[0];
+      bill.items.push({medId:m.id,batchId:b.id,qty:i.qty,loose:!!i.loose,mrp:i.loose?r4(b.mrp/u):b.mrp,rate:i.loose?r2((b.sale||b.mrp)/u):(b.sale||b.mrp),disc:i.disc||'',gst:m.gst})});
+    drawCart();toast(miss.length?`Added last bill's items. Out of stock: ${miss.join(', ')}.`:'Added all items from the last bill. Check quantities and save.')},
+  wGst:b=>{S.settings.gstType=b.dataset.v;const keep=[...document.querySelectorAll('#main input')].map(i=>[i.id,i.value]);render();keep.forEach(([id,v])=>{const e=$('#'+id);if(e)e.value=v})},
+  wStock:b=>{S.settings.stock=b.dataset.v;const keep=[...document.querySelectorAll('#main input')].map(i=>[i.id,i.value]);render();keep.forEach(([id,v])=>{const e=$('#'+id);if(e)e.value=v})},
+  wPaper:b=>{S.settings.paper=b.dataset.v;const keep=[...document.querySelectorAll('#main input')].map(i=>[i.id,i.value]);render();keep.forEach(([id,v])=>{const e=$('#'+id);if(e)e.value=v})},
+  wSave:()=>{const st=S.settings,shop=$('#w_shop').value.trim();if(!shop)return toast('Enter your shop name.');
+    const gi=($('#w_gstin')?.value||'').trim().toUpperCase();if(st.gstType==='regular'&&!/^[0-9]{2}[A-Z0-9]{13}$/.test(gi))return toast('Enter your 15-character GSTIN, or choose Composition or Not registered.');
+    Object.assign(st,{shop,addr:$('#w_addr').value.trim(),phone:$('#w_phone').value.trim(),dl:$('#w_dl').value.trim(),gstin:st.gstType==='regular'?gi:st.gstin,setupDone:true});
+    logEv('Shop set up');save();go(billingOnly()?'bill':'home');toast(billingOnly()?'Shop is set up. Make your first bill.':'Shop is set up. Next, import or add your stock.')},
+  startOwn:()=>{const st=S.settings;S=blankState();S.settings={...st,nextNo:1,cnNo:1,welcomed:true};logEv('Started with own shop');save();closeModal();go('setup')},
+  trySample:()=>{S.settings.welcomed=true;save();closeModal()},
+  addMed:b=>addToCart(b.dataset.id),
+  btype:b=>{bill.type=b.dataset.v;document.querySelectorAll('[data-act="btype"]').forEach(x=>x.classList.toggle('on',x===b));drawTotals()},
+  rmItem:b=>{bill.items.splice(+b.dataset.i,1);drawCart()},
+  loose:b=>{const it=bill.items[+b.dataset.i],m=med(it.medId),bt=bat(it.batchId)||{mrp:+it.mrp*(it.loose?m.units||1:1),sale:null},u=m.units||1;it.loose=!it.loose;it.qty=1;
+    it.mrp=it.loose?r4(bt.mrp/u):bt.mrp;it.rate=it.loose?r2((bt.sale||bt.mrp)/u):(bt.sale||bt.mrp);drawCart();const q=$('#q_'+b.dataset.i);if(q){q.focus();q.select()}},
+  saveBill:b=>saveBill(!!b.dataset.print),
+  clearBill:b=>{if(!bill.items.length||armed(b)){bill=newBill();render()}},
+  cancelEdit:()=>{bill=newBill();render();toast('Stopped editing. The bill was not changed.')},
+  ptype:b=>{pur.type=b.dataset.v;render()},
+  addPRow:()=>{pur.rows.push(pRow());drawPRows();$('#pn_'+(pur.rows.length-1)).focus()},
+  rmPRow:b=>{pur.rows.splice(+b.dataset.i,1);if(!pur.rows.length)pur.rows.push(pRow());drawPRows()},
+  savePur,
+  clearPur:b=>{if(armed(b)){pur=newPur();render()}},
+  medFilter:b=>{medFilter=b.dataset.v;document.querySelectorAll('[data-act="medFilter"]').forEach(x=>x.classList.toggle('on',x===b));drawMeds()},
+  medForm:b=>{modal(medFormHTML(b.dataset.id?med(b.dataset.id):null),true);bindMedForm()},
+  catAdd:b=>{const c=catFind(b.dataset.name);
+    if(c){let m=S.meds.find(x=>norm(x.name)===norm(c.name));if(!m){m={id:uid(),name:c.name,company:c.company,pack:c.pack,units:c.units,salt:c.salt,barcode:'',hsn:'3004',gst:5,mrp:c.mrp,min:0,sched:''};S.meds.push(m);save()}
+      addToCart(m.id);toast('Added. Check the MRP on the pack; database prices can be old.');return}modal(medFormHTML(null),true);bindMedForm();if(c)fillMedForm(c,true);$('#modal [data-f="batch"]').focus()},
+  cycleTheme:()=>{const o=['auto','light','dark'],t=S.settings.theme||'auto';S.settings.theme=o[(o.indexOf(t)+1)%3];save();applyTheme();drawNav();toast('Theme: '+THEME_LABEL[S.settings.theme])},
+  addBRow:()=>{$('#f_batches').insertAdjacentHTML('beforeend',`<tr data-bid=""><td><input data-f="batch" aria-label="Batch"></td><td><input data-f="exp" type="month" aria-label="Expiry"></td><td><input data-f="qty" type="number" min="0" step="any" style="width:80px" aria-label="Quantity"></td><td><input data-f="pur" type="number" min="0" step="0.01" style="width:90px" aria-label="Purchase rate"></td><td><input data-f="sale" type="number" min="0" step="0.01" style="width:90px" placeholder="= MRP" aria-label="Sale rate"></td></tr>`)},
+  saveMed:b=>saveMed(b.dataset.id),
+  delMed:b=>{if(!armed(b))return;const id=b.dataset.id,m=med(id);S.meds=S.meds.filter(x=>x.id!==id);S.batches=S.batches.filter(x=>x.medId!==id);logEv('Medicine deleted: '+m.name);save();closeModal();render();toast('Medicine deleted. Old bills still show it.')},
+  ptab:b=>{ptab=b.dataset.v;pq='';render()},
+  partyForm:b=>modal(partyFormHTML(b.dataset.id?party(b.dataset.id):null)),
+  saveParty:b=>{const name=$('#f_pname').value.trim();if(!name)return toast('Enter a name.');const gstin=$('#f_pgst').value.trim().toUpperCase();
+    if(gstin&&!/^[0-9]{2}[A-Z0-9]{13}$/.test(gstin))return toast('GSTIN should be 15 characters, starting with the 2-digit state code.');
+    let p=b.dataset.id?party(b.dataset.id):null;
+    if(S.parties.some(x=>x!==p&&x.type===b.dataset.type&&x.name.toLowerCase()===name.toLowerCase()))return toast('Someone with this name already exists. Add a detail like the town to tell them apart.');
+    const d={name,phone:$('#f_pphone').value.trim(),addr:$('#f_paddr').value.trim(),gstin,opening:+$('#f_popen').value||0};
+    if(p){if(+p.opening!==d.opening)logEv(`Opening balance of ${name} changed from ${money(p.opening)} to ${money(d.opening)}`);Object.assign(p,d)}else S.parties.push({id:uid(),type:b.dataset.type,...d});save();closeModal();render();toast('Saved '+name+'.')},
+  payForm:b=>{const p=party(b.dataset.id);modal(`<h2>${p.type==='customer'?'Receive payment from':'Pay'} ${esc(p.name)}</h2><p class="note">Current balance: <b>${money(balance(p))}</b></p>
+    <div class="form"><label>Amount (₹)<input id="f_amt" type="number" min="0" step="0.01" value="${Math.max(0,balance(p))||''}"></label><label>Date<input id="f_pdate" type="date" max="${today()}" value="${today()}"></label>
+    <label>Mode<select id="f_mode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Cheque</option></select></label><label>Note<input id="f_note"></label></div>
+    <div class="mfoot"><button class="btn pri" data-act="savePay" data-id="${p.id}">Save payment</button></div>`)},
+  savePay:b=>{const a=+$('#f_amt').value;if(!(a>0))return toast('Enter the amount.');if($('#f_pdate').value>today())return toast('The date cannot be in the future.');
+    S.payments.push({id:uid(),partyId:b.dataset.id,amount:a,date:$('#f_pdate').value||today(),mode:$('#f_mode').value,note:$('#f_note').value.trim()});save();closeModal();render();toast(`Payment of ${money(a)} saved.`)},
+  ledger:b=>{const p=party(b.dataset.id);modal(ledgerHTML(p)+`<div class="mfoot"><button class="btn" data-act="printLedger" data-id="${p.id}">Print statement</button></div>`,true)},
+  printLedger:b=>{const keep=S.settings.paper;if(keep!=='A4'&&keep!=='A5')S.settings.paper='A4';doPrint(ledgerHTML(party(b.dataset.id),true));S.settings.paper=keep},
+  rtab:b=>{rtab=b.dataset.v;render()},
+  printH1:()=>{const keep=S.settings.paper;S.settings.paper='A4';doPrint(`<div class="inv" style="padding:10px"><div class="shop">${esc(S.settings.shop)}</div><div>${esc(S.settings.addr)}${S.settings.dl?' · D.L. No: '+esc(S.settings.dl):''}</div><h3 style="margin:10px 0">Schedule H1 register, ${dmy(rfrom)} to ${dmy(rto)}</h3>${$('#rbody .tw').innerHTML}</div>`);S.settings.paper=keep},
+  viewBill:b=>showBill(b.dataset.id),
+  print:b=>doPrint(invoiceHTML(S.sales.find(x=>x.id===b.dataset.id))),
+  editBill:b=>{const s=S.sales.find(x=>x.id===b.dataset.id);if(S.returns.some(r=>r.saleId===s.id))return toast('This bill has returns, so it cannot be edited.');
+    if(s.items.some(i=>!med(i.medId)||(!i.nostock&&!bat(i.batchId))))return toast('A medicine on this bill was deleted, so it cannot be edited. Use Return items instead.');
+    bill={...newBill(),editId:s.id,editOld:JSON.parse(JSON.stringify(s)),date:s.date,name:s.name==='Walk-in'?'':s.name,phone:s.phone||'',doctor:s.doctor||'',type:s.type,disc:s.disc||'',paid:s.type==='Credit'?s.paid:'',
+      items:s.items.map(i=>({medId:i.medId,batchId:i.batchId,nostock:!!i.nostock,batchTxt:i.batch||'',exp:i.exp||'',qty:i.qty,loose:!!i.loose,mrp:i.mrp,rate:i.rate,disc:i.disc||'',gst:i.gst}))};
+    closeModal();go('bill')},
+  cancelBill:b=>{const s=S.sales.find(x=>x.id===b.dataset.id);if(S.returns.some(r=>r.saleId===s.id))return toast('This bill has returns. Return the remaining items instead of cancelling.');
+    if(!armed(b))return;s.cancelled=true;s.items.forEach(it=>{const bt=bat(it.batchId);if(bt)bt.qty=r4(bt.qty+packs(it))});logEv(`Bill ${s.no} cancelled (${money(s.total)})`);save();closeModal();render();toast(`Bill ${s.no} cancelled. Stock returned.`)},
+  returnForm:b=>modal(returnFormHTML(S.sales.find(x=>x.id===b.dataset.id)),true),
+  saveReturn:b=>{const s=S.sales.find(x=>x.id===b.dataset.id),f=saleFactor(s),items=[];
+    for(const inp of document.querySelectorAll('[id^="rq_"]')){const idx=+inp.dataset.idx,q=+inp.value||0,it=s.items[idx],left=it.qty-returnedQty(s,idx);
+      if(q<0||!Number.isInteger(q))return toast('Enter whole numbers to return.');if(q>left)return toast(`Only ${left} of ${it.name} can be returned.`);
+      if(q>0)items.push({idx,qty:q,amt:r2(lineAmt({...it,qty:q})*f)})}
+    if(!items.length)return toast('Enter how many items came back.');
+    const date=$('#r_date').value||today();if(date>today())return toast('The date cannot be in the future.');
+    items.forEach(ri=>{const it=s.items[ri.idx],bt=bat(it.batchId);if(bt)bt.qty=r4(bt.qty+packs({...it,qty:ri.qty}))});
+    const r={id:uid(),no:'CN-'+pad(S.settings.cnNo++),date,saleId:s.id,saleNo:s.no,partyId:s.partyId,name:s.name,mode:$('#r_mode').value,items,total:r2(items.reduce((a,i)=>a+i.amt,0))};
+    S.returns.push(r);logEv(`Return ${r.no} on bill ${s.no}: ${money(r.total)} (${r.mode==='cash'?'cash refund':'reduced udhaar'})`);save();closeModal();render();
+    toast(`Return ${r.no} saved: ${money(r.total)} ${r.mode==='cash'?'to refund in cash':'taken off the udhaar balance'}. Stock added back.`)},
+  saveSettings:()=>{const s=S.settings,used=maxBillNo($('#s_prefix').value.trim());const nn=parseInt($('#s_nextNo').value)||1;
+    if(nn<=used)return toast(`Next bill no. must be more than ${used}, the last bill number used.`);
+    const gi=$('#s_gstin').value.trim().toUpperCase();if(gi&&!/^[0-9]{2}[A-Z0-9]{13}$/.test(gi))return toast('GSTIN should be 15 characters, starting with the 2-digit state code.');
+    if($('#s_gstType').value==='regular'&&!gi)toast('Regular GST is selected but no GSTIN is entered. Bills will print as ESTIMATE until you add it.');
+    const before=JSON.stringify(s);['shop','addr','phone','dl','title','paper','prefix','footer','gstType','large','theme','stock'].forEach(k=>s[k]=$('#s_'+k).value.trim());s.gstin=gi;s.nextNo=nn;
+    if(before!==JSON.stringify(s))logEv('Settings changed');save();render();if(!( $('#s_gstType').value==='regular'&&!gi))toast('Settings saved.')},
+  backup:async()=>{if(await saveFile(`pharmacy-backup-${today()}.json`,JSON.stringify(S),'application/json')){markBackup();toast('Backup saved. Keep it on a pen drive or in Google Drive.')}},
+  pickFolder:async()=>{if(!window.showDirectoryPicker)return toast('This browser cannot save to a folder automatically. Use Chrome or Edge on a computer, or use Download backup.');
+    try{dirHandle=await window.showDirectoryPicker({mode:'readwrite'});if(idb)await idbSet('dir',dirHandle);await writeBackupFile();backupState='on';logEv('Auto backup folder set: '+dirHandle.name);save();render();toast(`Auto backup is on. Files are saved in “${dirHandle.name}”.`)}
+    catch(e){if(e&&e.name!=='AbortError')toast('Could not use that folder. Try another folder, or use Download backup.')}},
+  resumeBackup:async()=>{try{const p=await dirHandle.requestPermission({mode:'readwrite'});if(p==='granted'){await writeBackupFile();backupState='on';toast('Auto backup resumed.')}else toast('Backup stays paused until you allow it.')}catch(e){toast('Could not reach the backup folder. Choose it again in Settings.')}drawNav()},
+  restoreSnap:async b=>{if(!armed(b))return;try{const d=await idbGet(b.dataset.k);if(!d)throw 0;S=d;migrate();logEv('Restored daily copy from '+dmy(b.dataset.k.slice(5)));save();render();toast('Records restored to the start of '+dmy(b.dataset.k.slice(5))+'.')}catch(e){toast('Could not restore that copy.')}},
+  wipe:b=>{if(!armed(b))return;const st=S.settings;S=blankState();S.settings=st;S.settings.nextNo=1;S.settings.cnNo=1;logEv('All data deleted');save();render();toast('All data deleted.')},
+  clearSample:b=>{if(!armed(b))return;const st=S.settings;S=blankState();S.settings={...st,nextNo:1,cnNo:1,welcomed:true};logEv('Sample data removed');save();go(st.setupDone?'home':'setup');toast('Sample data removed. Add your medicines or enter a purchase to begin.')},
+};
+document.addEventListener('click',e=>{
+  if(!S)return;
+  if(e.target.id==='modal'){closeModal();return}
+  const g=e.target.closest('[data-go]');if(g){if(g.dataset.tab)rtab=g.dataset.tab;closeModal();go(g.dataset.go);return}
+  const a=e.target.closest('[data-act]');if(a&&A[a.dataset.act])A[a.dataset.act](a,e);
+});
+document.addEventListener('keydown',e=>{
+  if(!S)return;
+  if(e.key==='Escape'&&!$('#modal').hidden){A.close();return}
+  if(e.key==='Enter'&&!$('#modal').hidden&&$('#modal .banner.info')&&!e.target.closest('input,select,button,a')){e.preventDefault();A.close();return}
+  const k={F2:'bill',F3:'purchase',F6:'meds'}[e.key];
+  if(k){e.preventDefault();closeModal();go(k);return}
+  if(e.key==='F4'&&view==='bill'){e.preventDefault();$('#medsearch').focus()}
+  if(e.key==='F10'&&view==='bill'&&$('#modal').hidden){e.preventDefault();saveBill(true)}
+});
+
+/* ================= start ================= */
+(async function init(){
+  try{idb=await idbOpen()}catch(e){idb=null}
+  let d=null;
+  if(idb){try{d=await idbGet('state');lastBackup=(await idbGet('lastBackup'))||null;dirHandle=(await idbGet('dir'))||null}catch(e){}}
+  let migrated=false;
+  if(!d){try{const v=localStorage.getItem(LEGACY_KEY);if(v){d=JSON.parse(v);migrated=true}}catch(e){}}
+  if(d&&d.meds){S=d;migrate();if(migrated)logEv('Records moved to the new storage')}else seed();
+  if(dirHandle)backupState='paused';
+  save();
+  try{await snapshotToday()}catch(e){}
+  render();
+  if(S.sample&&!S.settings.welcomed)modal(`<h2>Welcome to Pharmacy Counter</h2><p class="note">Free billing, stock and udhaar for your medical shop.</p><div class="welcome"><button data-act="startOwn"><b>Start with my shop</b><span class="note">Set up your shop name, GST and printer, then add stock.</span></button><button data-act="trySample"><b>Look around first</b><span class="note">Try it with sample medicines and bills. Remove them anytime.</span></button></div>`);
+  if(dirHandle)autoBackup();
+  setTimeout(loadCatalog,800);
+})();
+</script>
