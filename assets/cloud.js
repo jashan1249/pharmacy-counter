@@ -75,7 +75,8 @@
   window.PCCloud = {
     enabled, session, user, uid, CloudError,
     async signUp(email, password, meta) {
-      const d = await raw('POST', '/auth/v1/signup', { body: { email, password, data: meta || {} } });
+      const back = location.href.replace(/[^/]*([?#].*)?$/, '') + 'login.html';
+      const d = await raw('POST', '/auth/v1/signup?redirect_to=' + encodeURIComponent(back), { body: { email, password, data: meta || {} } });
       if (d && d.access_token) { setSession(d); return { session: true }; }
       return { session: false };
     },

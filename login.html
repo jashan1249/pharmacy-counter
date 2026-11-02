@@ -83,6 +83,8 @@
   function busy(form, on) { const b = form.querySelector('button[type=submit]'); b.disabled = on; b.dataset.t = b.dataset.t || b.textContent; b.textContent = on ? 'Please wait…' : b.dataset.t; }
 
   // Arriving from an email link (password reset or email confirmation)
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if (hp.get('error_description')) { history.replaceState(null, '', location.pathname); show('login'); msg(hp.get('error_code') === 'otp_expired' ? 'That email link has expired. Log in, or use Forgot password to get a new link.' : hp.get('error_description')); }
   const fromHash = PCCloud.takeSessionFromHash();
   if (fromHash) {
     history.replaceState(null, '', location.pathname + location.search);
