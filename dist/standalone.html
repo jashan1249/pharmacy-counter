@@ -22,7 +22,7 @@
   --warn:#f0b357; --warn-soft:#35280f; --bad:#f08279; --bad-soft:#3a1a18; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.45}
 #app{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:100vh}
 .nav{background:var(--surface);border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;padding-left:max(10px,env(safe-area-inset-left,0px))}
 .brand{font-weight:700;font-size:17px;padding:4px 10px 14px;display:flex;gap:8px;align-items:center}
@@ -34,7 +34,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-
 .nav>button:hover{background:var(--bg)}
 .nav>button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .nav svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.themebtn{margin-top:auto}
+.langbtn{margin-top:auto}
 .nav kbd{margin-left:auto;font:11px var(--font);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
 .bk{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:grid;gap:6px}
 .bk.ok{background:var(--accent-soft)} .bk.warn{background:var(--warn-soft)}
@@ -105,7 +105,9 @@ table.t{width:100%;border-collapse:collapse;font-size:14px}
 .res b{font-weight:600}
 .res .rt{text-align:right;white-space:nowrap;font-size:13px}
 .empty{padding:26px;text-align:center;color:var(--muted)}
-.billgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+.billgrid{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;align-items:start}
+@media (max-width:1440px) and (min-width:1051px){#cart th,#cart td{padding:7px 4px}#cart td:first-child{min-width:140px}#cart .gc{display:none}}
+@media (max-width:1240px) and (min-width:1051px){#cart .dc{display:none}}
 @media (max-width:1050px){.billgrid{grid-template-columns:minmax(0,1fr)}}
 .totals{display:grid;gap:8px;position:sticky;top:14px}
 .tl{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
@@ -127,7 +129,12 @@ table.t{width:100%;border-collapse:collapse;font-size:14px}
   #cart input,#cart select{width:100%!important;min-width:0!important}
   #cart td:first-child{min-width:0}
 }
-#cart select{min-width:130px}
+#cart select{min-width:0;width:140px}
+#cart td.be>*{display:block}
+#cart td.be>*+*{margin-top:4px}
+#cart td.be .chip{display:inline-block}
+#cart td.be input{width:140px}
+#cart td.be input[type=month]{font-size:13px}
 #cart td:first-child{min-width:170px}
 .nmrow{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
 #modal{position:fixed;inset:0;background:rgba(10,20,16,.5);z-index:20;display:grid;place-items:start center;overflow:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px))}
@@ -171,6 +178,14 @@ table.t{width:100%;border-collapse:collapse;font-size:14px}
 .rc .g{font-size:14px;font-weight:700}
 .rc .s{font-size:9.5px}
 #printArea{display:none}
+.hint{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:11px;font-weight:700;cursor:help;position:relative;margin-left:4px;vertical-align:1px}
+.hint:hover::after,.hint:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:max-content;max-width:240px;background:var(--fg);color:var(--surface);font-size:12.5px;font-weight:500;line-height:1.4;padding:7px 10px;border-radius:7px;white-space:normal;z-index:30;text-align:left}
+.guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:12px;align-items:center;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.guide .g{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}
+.guide .g b.n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-size:14px}
+@media (max-width:820px){.guide{grid-template-columns:minmax(0,1fr)}}
+.langbtn{font-weight:600}
+.morebar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
 body.large{zoom:1.15}
 .check{display:grid;gap:8px}
 .ck{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
@@ -215,6 +230,7 @@ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"
 const r2=n=>Math.round((+n||0)*100)/100;
 const r4=n=>Math.round((+n||0)*10000)/10000;
 const n2=n=>r2(n).toFixed(2);
+const hint=t=>`<span class="hint" tabindex="0" data-tip="${String(t).replace(/"/g,'&quot;')}" aria-label="${String(t).replace(/"/g,'&quot;')}">?</span>`;
 const money=n=>(r2(n)<0?'−':'')+'₹'+Math.abs(r2(n)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const pad=n=>String(n).padStart(4,'0');
@@ -268,6 +284,59 @@ async function autoBackup(){
     await writeBackupFile();backupState='on'}catch(e){backupState='paused'}
   drawNav();
 }
+
+/* ================= Hindi (हिंदी) ================= */
+const HI={
+'Home':'होम','New Bill':'नया बिल','Purchase':'ख़रीद','Medicines':'दवाइयाँ','Customers':'ग्राहक','Reports':'रिपोर्ट','Settings':'सेटिंग्स',
+'Auto':'ऑटो','Day':'दिन','Night':'रात','Sync now':'अभी सिंक करें','Log out':'लॉग आउट','Back up now':'अभी बैकअप लें','Last backup':'आख़िरी बैकअप',
+'+ New Bill':'+ नया बिल','+ Purchase Entry':'+ ख़रीद एंट्री',"Today's sales":'आज की बिक्री','To collect':'वसूली बाकी','from customers':'ग्राहकों से','To pay':'देना बाकी','to suppliers':'सप्लायर को',
+'Expiry alerts':'एक्सपायरी अलर्ट','batches expired or within 3 months':'बैच एक्सपायर या 3 महीने में','Low stock':'कम स्टॉक','medicines to reorder':'दवाइयाँ मँगवानी हैं',
+'Recent bills':'हाल के बिल','Needs attention':'ध्यान दें','View':'देखें','All good. No expiring or low-stock medicines.':'सब ठीक है। कोई दवा एक्सपायर या कम नहीं है।',
+'Bills this month':'इस महीने के बिल','stock tracking is off':'स्टॉक ट्रैकिंग बंद है',
+'Set up shop name, GST type and printer':'दुकान का नाम, GST और प्रिंटर सेट करें','Make your first bill':'अपना पहला बिल बनाएँ','Set up backup so you never lose records':'बैकअप सेट करें ताकि रिकॉर्ड कभी न खोएँ',
+'Add your stock: import your Excel stock list, or enter purchases':'स्टॉक जोड़ें: Excel से इम्पोर्ट करें या ख़रीद डालें','Set up':'सेट करें','Import stock':'स्टॉक इम्पोर्ट','New bill':'नया बिल','Backup':'बैकअप',
+'Set up your shop':'अपनी दुकान सेट करें','Takes one minute. You can change all of this later in Settings.':'एक मिनट लगेगा। बाद में सेटिंग्स में बदल सकते हैं।',
+'Shop name':'दुकान का नाम','Address':'पता','Phone':'फ़ोन','Drug licence no.':'ड्रग लाइसेंस नंबर','How do you want to start?':'कैसे शुरू करना है?','How do you charge GST?':'GST कैसे लगाते हैं?',
+'Which printer do you use?':'कौन सा प्रिंटर है?','Save and start':'सेव करें और शुरू करें','Print a test bill':'टेस्ट बिल प्रिंट करें','Check that your printer and paper size work.':'देखें कि प्रिंटर और काग़ज़ ठीक हैं।',
+'Billing only':'सिर्फ़ बिलिंग','Billing + stock':'बिलिंग + स्टॉक','Regular GST':'रेगुलर GST','Composition dealer':'कंपोज़िशन डीलर','Not registered':'रजिस्टर्ड नहीं',
+'Half page (A5)':'आधा पेज (A5)','Full page (A4)':'पूरा पेज (A4)','Thermal 3 inch':'थर्मल 3 इंच','Thermal 2 inch':'थर्मल 2 इंच',
+'Patient / customer name':'मरीज़ / ग्राहक का नाम','Phone (for WhatsApp bill)':'फ़ोन (WhatsApp बिल के लिए)','Doctor name':'डॉक्टर का नाम','Date':'तारीख़',
+'Type medicine, salt or scan barcode…':'दवा का नाम, साल्ट लिखें या बारकोड स्कैन करें…','Leave blank for walk-in':'आम ग्राहक के लिए ख़ाली छोड़ें',
+'Cash':'नकद','UPI':'UPI','Credit (Udhaar)':'उधार','Items':'आइटम','Sub total':'कुल','Discount (₹)':'छूट (₹)','GST included':'GST शामिल','Round off':'राउंड ऑफ़','Total':'कुल रकम',
+'Paid now (₹)':'अभी दिए (₹)','Cash received (₹)':'मिला नकद (₹)','Return to customer':'ग्राहक को लौटाएँ','Still to collect':'अभी लेना बाकी',
+'Save & Print':'सेव और प्रिंट','Save only':'सिर्फ़ सेव','Clear':'साफ़ करें','Medicine':'दवा','Batch':'बैच','Exp':'एक्सपायरी','Qty':'मात्रा','Rate':'रेट','Disc %':'छूट %','Amount':'रकम','Expiry':'एक्सपायरी',
+'Search above and press Enter to add medicines. Barcode scanners work here too.':'ऊपर दवा खोजें और Enter दबाएँ। बारकोड स्कैनर भी चलता है।',
+'Type the medicine name':'दवा का नाम लिखें','3 letters are enough, or scan the barcode':'3 अक्षर काफ़ी हैं, या बारकोड स्कैन करें',
+'Press Enter, then type the quantity':'Enter दबाएँ, फिर मात्रा लिखें','Enter again to add the next medicine':'अगली दवा के लिए फिर Enter',
+'Press F10 or Save & Print':'F10 या सेव और प्रिंट दबाएँ','Cash, UPI or Credit at the top right':'नकद, UPI या उधार ऊपर दाईं ओर','Got it':'समझ गया',
+'Repeat last bill':'पिछला बिल दोहराएँ','Full strip ⇄':'पूरी स्ट्रिप ⇄','Add to bill':'बिल में जोड़ें',
+'Saved.':'सेव हो गया।','Next bill (Enter)':'अगला बिल (Enter)','Print':'प्रिंट','Send on WhatsApp':'WhatsApp पर भेजें','Edit bill':'बिल बदलें','Return items':'सामान वापसी','Cancel bill':'बिल रद्द करें',
+'Purchase Entry':'ख़रीद एंट्री',"Enter the distributor's bill. Stock is added batch-wise when you save.":'डिस्ट्रीब्यूटर का बिल डालें। सेव करने पर स्टॉक बैच के हिसाब से जुड़ जाएगा।',
+'Paid now':'अभी चुकाया','Credit':'उधार','Supplier / distributor':'सप्लायर / डिस्ट्रीब्यूटर','Supplier bill no.':'सप्लायर बिल नंबर','Bill date':'बिल की तारीख़','+ Add row':'+ लाइन जोड़ें','Save Purchase':'ख़रीद सेव करें',
+'Simple view':'आसान व्यू','Simple view: only the columns most bills need.':'आसान व्यू: सिर्फ़ ज़रूरी कॉलम।','Pur. rate':'ख़रीद रेट','Type medicine name':'दवा का नाम लिखें',
+'Medicines & Stock':'दवाइयाँ और स्टॉक','+ Add Medicine':'+ दवा जोड़ें','Import from Excel':'Excel से इम्पोर्ट','All':'सभी','Expiring':'एक्सपायर होने वाली','Out of stock':'स्टॉक ख़त्म','Edit / stock':'बदलें / स्टॉक',
+'Start billing':'बिलिंग शुरू करें','Customers & Suppliers':'ग्राहक और सप्लायर','Track udhaar from customers and dues to distributors.':'ग्राहकों का उधार और डिस्ट्रीब्यूटर का बकाया देखें।',
+'Suppliers':'सप्लायर','Receive payment':'पेमेंट लें','Make payment':'पेमेंट करें','Ledger':'खाता','Edit':'बदलें','WhatsApp reminder':'WhatsApp याद दिलाएँ',
+'Sales':'बिक्री','Day close':'दिन का हिसाब','GST':'GST','More:':'और:','Returns':'वापसी','Purchases':'ख़रीद','H1 register':'H1 रजिस्टर','Activity log':'गतिविधि लॉग','From':'से','To':'तक','Open':'खोलें',
+'Save settings':'सेटिंग्स सेव करें','Shop details':'दुकान की जानकारी','Download backup now':'अभी बैकअप डाउनलोड करें','Start fresh':'नए सिरे से शुरू करें',
+'Remove sample data':'सैंपल डेटा हटाएँ','Batch / Expiry':'बैच / एक्सपायरी','Batch (optional)':'बैच (ज़रूरी नहीं)','Not in stock · sold without stock':'स्टॉक में नहीं · बिना स्टॉक बिका','MRP':'MRP','Disc %':'छूट %','Show all columns (HSN, free, discount, GST, sale rate)':'सभी कॉलम दिखाएँ','Showing all columns.':'सभी कॉलम दिख रहे हैं।','No medicines in your shop yet.':'दुकान में अभी कोई दवा नहीं है।','Click again to confirm':'पक्का करने के लिए फिर दबाएँ'
+};
+const HI_RE=[[/^(\d+) bills$/,'$1 बिल'],[/^Bill no\. (.+)$/,'बिल नंबर $1'],[/^Get started: (\d+) of (\d+) done$/,'शुरुआत: $2 में से $1 पूरे'],[/^Saved to cloud (.+)$/,'क्लाउड में सेव $1'],[/^Stock (.+)$/,'स्टॉक $1']];
+const HI_ATTR=['placeholder','title','aria-label'];
+function hiText(t){const k=t.trim();if(!k)return null;if(HI[k])return t.replace(k,HI[k]);for(const[r,v]of HI_RE)if(r.test(k))return t.replace(k,k.replace(r,v));return null}
+function translateNode(root){
+  if(!S||S.settings.lang!=='hi'||!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&!n.parentElement.closest('script,style,.inv,.rc,#printArea,[data-nohi]')?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const todo=[];while(w.nextNode())todo.push(w.currentNode);
+  for(const n of todo){const v=hiText(n.nodeValue);if(v!==null&&v!==n.nodeValue)n.nodeValue=v}
+  if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title]').forEach(el=>{for(const a of HI_ATTR){const v=el.getAttribute(a);if(v&&HI[v.trim()])el.setAttribute(a,HI[v.trim()])}});
+}
+let hiObs=null;
+function applyLang(){
+  document.documentElement.lang=S.settings.lang==='hi'?'hi':'en';
+  if(S.settings.lang==='hi'){translateNode(document.body);if(!hiObs){hiObs=new MutationObserver(ms=>{if(S.settings.lang!=='hi')return;for(const m of ms){m.addedNodes.forEach(n=>{if(n.nodeType===1)translateNode(n);else if(n.nodeType===3&&n.parentElement){const v=hiText(n.nodeValue);if(v!==null&&v!==n.nodeValue)n.nodeValue=v}});if(m.type==='characterData'){}}});hiObs.observe(document.body,{childList:true,subtree:true})}}
+}
+
 /* ================= cloud sync (Supabase) ================= */
 const MERGE_ARRAYS=['meds','batches','parties','sales','returns','purchases','payments'];
 function mergeStates(a,b){ // a, b = two versions; newer one wins on the same record
@@ -453,10 +522,10 @@ function backupBox(){
   const old=!lastBackup||Date.now()-Date.parse(lastBackup)>864e5;
   return`<div class="bk ${old?'warn':'ok'}"><span><b>Last backup</b><br>${timeAgo(lastBackup)}</span><button class="btn sm" data-act="backup">Back up now</button></div>`;
 }
-function drawNav(){$('#nav').innerHTML='<div class="brand"><i>+</i><span>Pharmacy Counter<br><span class="beta">BETA TEST</span></span></div>'+NAV.map(([k,l,kb])=>`<button data-go="${k}" class="${view===k?'on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${l}${kb?`<kbd>${kb}</kbd>`:''}</button>`).join('')+`<button class="themebtn" data-act="cycleTheme" title="Switch day / night"><svg viewBox="0 0 24 24">${(S&&S.settings.theme)==='dark'?'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>':(S&&S.settings.theme)==='light'?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 000-18z" fill="currentColor"/>'}</svg>${THEME_LABEL[(S&&S.settings.theme)||'auto'].split(' ')[0]}</button>`+backupBox()}
+function drawNav(){$('#nav').innerHTML='<div class="brand"><i>+</i><span>Pharmacy Counter<br><span class="beta">BETA TEST</span></span></div>'+NAV.map(([k,l,kb])=>`<button data-go="${k}" class="${view===k?'on':''}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${l}${kb?`<kbd>${kb}</kbd>`:''}</button>`).join('')+`<button class="langbtn" data-act="toggleLang" title="Change language / भाषा बदलें"><svg viewBox="0 0 24 24"><path d="M4 5h9M8.5 3v2M6 5c1 4 4 7 7 8M11 5c-1 4-4 7-7 8M13 21l4-10 4 10M14.5 17h5"/></svg>${(S&&S.settings.lang)==='hi'?'English':'हिंदी'}</button>`+`<button class="themebtn" data-act="cycleTheme" title="Switch day / night"><svg viewBox="0 0 24 24">${(S&&S.settings.theme)==='dark'?'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>':(S&&S.settings.theme)==='light'?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/>':'<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 000-18z" fill="currentColor"/>'}</svg>${THEME_LABEL[(S&&S.settings.theme)||'auto'].split(' ')[0]}</button>`+backupBox()}
 function go(v){view=v;render();window.scrollTo(0,0)}
 const V={},AFTER={};
-function render(){applyTheme();document.body.classList.toggle('large',!!S.settings.large);drawNav();$('#main').innerHTML=(S.sample?`<div class="banner"><span>You are looking at <b>sample medicines, customers and bills</b>. Remove them when you are ready to enter your own.</span><button class="btn sm" data-act="clearSample">Remove sample data</button></div>`:'')+V[view]();if(AFTER[view])AFTER[view]()}
+function render(){applyTheme();setTimeout(()=>S&&applyLang(),0);document.body.classList.toggle('large',!!S.settings.large);drawNav();$('#main').innerHTML=(S.sample?`<div class="banner"><span>You are looking at <b>sample medicines, customers and bills</b>. Remove them when you are ready to enter your own.</span><button class="btn sm" data-act="clearSample">Remove sample data</button></div>`:'')+V[view]();if(AFTER[view])AFTER[view]()}
 
 /* ================= FIRST-TIME SETUP ================= */
 V.setup=()=>{const s=S.settings;return`<div class="head"><div><h1>Set up your shop</h1><p class="muted">Takes one minute. You can change all of this later in Settings.</p></div></div>
@@ -467,13 +536,15 @@ V.setup=()=>{const s=S.settings;return`<div class="head"><div><h1>Set up your sh
    <label>Phone<input id="w_phone" inputmode="tel" value="${s.phone==='98XXXXXXXX'?'':esc(s.phone)}"></label>
    <label>Drug licence no.<input id="w_dl" value="${esc(s.dl)}"></label>
   </div>
+  <div class="row"><span class="note">Language / भाषा:</span><div class="seg"><button data-act="setLang" data-v="en" class="${(s.lang||'en')==='en'?'on':''}">English</button><button data-act="setLang" data-v="hi" class="${s.lang==='hi'?'on':''}">हिंदी</button></div></div>
   <h3 style="margin:6px 0 0">How do you want to start?</h3>
-  <div class="welcome">${[['billing','Billing only','Start billing today. Pick any medicine from the 2.4 lakh database; no stock to enter.'],['track','Billing + stock','Track stock, batches and expiry. Import your stock from Excel or add as you buy.']].map(([v,t,d])=>`<button data-act="wStock" data-v="${v}" style="${(s.stock||'track')===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span></button>`).join('')}</div>
+  <div class="welcome">${[['billing','Billing only','Start billing today. Pick any medicine from the 2.4 lakh database; no stock to enter.','सिर्फ़ बिलिंग, स्टॉक डालने की ज़रूरत नहीं'],['track','Billing + stock','Track stock, batches and expiry. Import your stock from Excel or add as you buy.','बिलिंग के साथ स्टॉक और एक्सपायरी']].map(([v,t,d,h])=>`<button data-act="wStock" data-v="${v}" style="${(s.stock||'track')===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span><span class="note" data-nohi>${h}</span></button>`).join('')}</div>
   <h3 style="margin:6px 0 0">How do you charge GST?</h3>
-  <div class="welcome" id="w_gst">${[['regular','Regular GST','I have a GSTIN and give tax invoices'],['composition','Composition dealer','I pay tax on turnover; bill of supply'],['unregistered','Not registered','Small shop, no GST number']].map(([v,t,d])=>`<button data-act="wGst" data-v="${v}" style="${s.gstType===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span></button>`).join('')}</div>
+  <div class="welcome" id="w_gst">${[['regular','Regular GST','I have a GSTIN and give tax invoices','GST नंबर है, टैक्स इनवॉइस देते हैं'],['composition','Composition dealer','I pay a small tax on total sales each quarter; bills show no GST','कंपोज़िशन डीलर, बिल पर GST नहीं'],['unregistered','Not registered','Small shop, no GST number','GST नंबर नहीं है']].map(([v,t,d,h])=>`<button data-act="wGst" data-v="${v}" style="${s.gstType===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span><span class="note" data-nohi>${h}</span></button>`).join('')}</div>
   <label id="w_gstinwrap" ${s.gstType==='regular'?'':'hidden'}>GSTIN<input id="w_gstin" maxlength="15" value="${esc(s.gstin)}" placeholder="03ABCDE1234F1Z5"></label>
   <h3 style="margin:6px 0 0">Which printer do you use?</h3>
   <div class="welcome" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${[['A5','Half page (A5)','Normal printer, like your old slips'],['A4','Full page (A4)','Normal printer'],['80mm','Thermal 3 inch','Receipt printer'],['58mm','Thermal 2 inch','Small receipt printer']].map(([v,t,d])=>`<button data-act="wPaper" data-v="${v}" style="${s.paper===v?'border-color:var(--accent);background:var(--accent-soft)':''}"><b>${t}</b><span class="note">${d}</span></button>`).join('')}</div>
+  <div class="row"><button class="btn" data-act="testPrint">Print a test bill</button><span class="note">Check that your printer and paper size work.</span></div>
   <div class="row"><button class="btn pri big" data-act="wSave">Save and start</button></div>
  </div>`};
 
@@ -515,7 +586,8 @@ const newBill=()=>({date:today(),name:'',phone:'',doctor:'',type:'Cash',items:[]
 let bill=newBill(),hi=0,results=[];
 const editExtra=bid=>bill.editOld?bill.editOld.items.filter(i=>i.batchId===bid).reduce((a,i)=>a+packs(i),0):0;
 const avail=b=>r4((b?b.qty:0)+(b?editExtra(b.id):0));
-V.bill=()=>`${bill.editId?`<div class="banner info"><span>You are <b>editing bill ${esc(bill.editOld.no)}</b>. Saving replaces it and keeps the same number.</span><button class="btn sm" data-act="cancelEdit">Stop editing</button></div>`:''}
+const guideHTML=()=>S.settings.guideDone||bill.editId?'':`<div class="guide" id="guide"><div class="g"><b class="n">1</b><span><b>Type the medicine name</b><br>3 letters are enough, or scan the barcode</span></div><div class="g"><b class="n">2</b><span><b>Press Enter, then type the quantity</b><br>Enter again to add the next medicine</span></div><div class="g"><b class="n">3</b><span><b>Press F10 or Save &amp; Print</b><br>Cash, UPI or Credit at the top right</span></div><button class="btn sm" data-act="guideDone">Got it</button></div>`;
+V.bill=()=>guideHTML()+`${bill.editId?`<div class="banner info"><span>You are <b>editing bill ${esc(bill.editOld.no)}</b>. Saving replaces it and keeps the same number.</span><button class="btn sm" data-act="cancelEdit">Stop editing</button></div>`:''}
  <div class="head"><div><h1>${bill.editId?'Edit Bill':'New Bill'}</h1><p class="muted">Bill no. ${esc(bill.editId?bill.editOld.no:S.settings.prefix+pad(S.settings.nextNo))} · <span class="keys"><kbd>F4</kbd> search · <kbd>Enter</kbd> add · <kbd>F10</kbd> save &amp; print</span></p></div>
   <div class="seg" role="group" aria-label="Payment">${['Cash','UPI','Credit'].map(t=>`<button data-act="btype" data-v="${t}" class="${bill.type===t?'on':''}">${t==='Credit'?'Credit (Udhaar)':t}</button>`).join('')}</div></div>
  <div class="billgrid">
@@ -625,20 +697,19 @@ function rowState(it){
 function drawCart(){
   const c=$('#cart');if(!c)return;
   if(!bill.items.length){c.innerHTML='<tbody><tr><td class="empty">Search above and press Enter to add medicines. Barcode scanners work here too.</td></tr></tbody>';drawTotals();return}
-  c.innerHTML=`<thead><tr><th>Medicine</th><th>Batch</th><th>Exp</th><th class="r">Qty</th><th class="r">MRP</th><th class="r">Rate</th><th class="r">Disc %</th><th class="r">GST</th><th class="r">Amount</th></tr></thead><tbody>${
+  c.innerHTML=`<thead><tr><th>Medicine</th><th>Batch / Expiry</th><th class="r">Qty</th><th class="r">MRP</th><th class="r">Rate</th><th class="r dc">Disc %</th><th class="r gc">GST</th><th class="r">Amount</th></tr></thead><tbody>${
     bill.items.map((it,i)=>{const m=med(it.medId),b=bat(it.batchId),bs=it.nostock?[]:S.batches.filter(x=>x.medId===it.medId&&(avail(x)>0||x.id===it.batchId)&&!isExpired(x.exp));
     const st=rowState(it);
     return`<tr id="row_${i}" class="${st.bad?'warnrow':''}"><td class="nm"><div class="nmrow"><div><b>${esc(m.name)}</b><div class="sub" id="st_${i}" style="${st.note?(st.bad?'color:var(--bad)':'color:var(--warn)'):''}">${esc(st.note||m.pack)}</div>
       ${m.units>1?`<button class="unit ${it.loose?'on':''}" data-act="loose" data-i="${i}">${it.loose?`Loose ${unitWord(m)}s`:`Full ${m.units>1?'strip':'pack'}`} ⇄</button>`:''}</div>
       <button class="x" data-act="rmItem" data-i="${i}" aria-label="Remove ${esc(m.name)}">×</button></div></td>
-     ${it.nostock?`<td data-l="Batch"><input data-i="${i}" data-k="batchTxt" id="bt_${i}" value="${esc(it.batchTxt)}" placeholder="optional" style="width:80px" aria-label="Batch"></td>
-     <td data-l="Expiry"><input data-i="${i}" data-k="exp" id="ex_${i}" type="month" value="${it.exp}" style="width:130px" aria-label="Expiry"></td>`:`<td data-l="Batch"><select data-i="${i}" data-k="batchId" id="bt_${i}" aria-label="Batch">${bs.map(x=>`<option value="${x.id}" ${x.id===it.batchId?'selected':''}>${esc(x.batch)} (${fmtStock(avail(x),m)})</option>`).join('')}</select></td>
-     <td data-l="Expiry">${b?`<span class="chip ${isSoon(b.exp)?'warn':''}">${expF(b.exp)}</span>`:''}</td>`}
-     <td data-l="${it.loose?'Qty ('+unitWord(m)+'s)':'Qty'}"><input id="q_${i}" data-i="${i}" data-k="qty" type="number" min="1" step="1" value="${it.qty}" style="width:70px" aria-label="Quantity"></td>
-     <td class="r" data-l="MRP${it.loose?' / '+unitWord(m):''}">${it.nostock?`<input data-i="${i}" data-k="mrp" id="mr_${i}" type="number" step="0.01" min="0" value="${it.mrp}" style="width:90px" aria-label="MRP">`:n2(it.mrp)}</td>
-     <td data-l="Rate"><input id="rt_${i}" data-i="${i}" data-k="rate" type="number" step="0.01" min="0" value="${it.rate}" style="width:90px" aria-label="Rate"></td>
-     <td data-l="Disc %"><input id="ds_${i}" data-i="${i}" data-k="disc" type="number" step="0.01" min="0" max="100" value="${it.disc}" placeholder="0" style="width:70px" aria-label="Discount percent"></td>
-     <td class="r" data-l="GST">${gstOn()?it.gst+'%':'—'}</td><td class="r" data-l="Amount" id="am_${i}">${n2(lineAmt(it))}</td></tr>`}).join('')}</tbody>`;
+     ${it.nostock?`<td class="be" data-l="Batch / Expiry"><input data-i="${i}" data-k="batchTxt" id="bt_${i}" value="${esc(it.batchTxt)}" placeholder="Batch (optional)" aria-label="Batch"><input data-i="${i}" data-k="exp" id="ex_${i}" type="month" value="${it.exp}" aria-label="Expiry"></td>`
+       :`<td class="be" data-l="Batch / Expiry"><select data-i="${i}" data-k="batchId" id="bt_${i}" aria-label="Batch">${bs.map(x=>`<option value="${x.id}" ${x.id===it.batchId?'selected':''}>${esc(x.batch)} (${fmtStock(avail(x),m)})</option>`).join('')}</select>${b?`<span class="chip ${isSoon(b.exp)?'warn':''}">Exp ${expF(b.exp)}</span>`:''}</td>`}
+     <td data-l="${it.loose?'Qty ('+unitWord(m)+'s)':'Qty'}"><input id="q_${i}" data-i="${i}" data-k="qty" type="number" min="1" step="1" value="${it.qty}" style="width:64px" aria-label="Quantity"></td>
+     <td class="r" data-l="MRP${it.loose?' / '+unitWord(m):''}">${it.nostock?`<input data-i="${i}" data-k="mrp" id="mr_${i}" type="number" step="0.01" min="0" value="${it.mrp}" style="width:80px" aria-label="MRP">`:n2(it.mrp)}</td>
+     <td data-l="Rate"><input id="rt_${i}" data-i="${i}" data-k="rate" type="number" step="0.01" min="0" value="${it.rate}" style="width:80px" aria-label="Rate"></td>
+     <td class="dc" data-l="Disc %"><input id="ds_${i}" data-i="${i}" data-k="disc" type="number" step="0.01" min="0" max="100" value="${it.disc}" placeholder="0" style="width:60px" aria-label="Discount percent"></td>
+     <td class="r gc" data-l="GST">${gstOn()?it.gst+'%':'—'}</td><td class="r" data-l="Amount" id="am_${i}">${n2(lineAmt(it))}</td></tr>`}).join('')}</tbody>`;
   drawTotals();
 }
 function cartInput(e){
@@ -692,7 +763,7 @@ function saveBill(print){
       const pk=packs({...it,units:m.units});b.qty=r4(b.qty-pk);
       return{medId:m.id,batchId:b.id,name:m.name,pack:m.pack,hsn:m.hsn,sched:m.sched,batch:b.batch,exp:b.exp,qty:+it.qty,loose:!!it.loose,units:m.units||1,unitName:unitWord(m),mrp:+it.mrp,rate:+it.rate,disc:+it.disc||0,gst:+it.gst,pur:+b.pur||0}})};
   if(old){S.sales[S.sales.indexOf(old)]=sale;logEv(`Bill ${sale.no} edited (was ${money(old.total)}, now ${money(sale.total)})`)}
-  else{S.sales.push(sale);S.settings.nextNo++}
+  else{S.sales.push(sale);S.settings.nextNo++;S.settings.guideDone=true}
   save();bill=newBill();render();toast(`Saved bill ${sale.no} for ${money(sale.total)}.`);
   showBill(sale.id,true);if(print)doPrint(invoiceHTML(sale));
 }
@@ -712,6 +783,7 @@ V.purchase=()=>`<div class="head"><div><h1>Purchase Entry</h1><p class="muted">E
 
   </div>
   <div class="card stack">
+   <div class="row" style="justify-content:space-between"><span class="note">${S.settings.purFull?'Showing all columns.':'Simple view: only the columns most bills need.'}</span><button class="btn sm" data-act="purFull">${S.settings.purFull?'Simple view':'Show all columns (HSN, free, discount, GST, sale rate)'}</button></div>
    <div class="tw"><table class="t" id="ptable"></table></div>
    <div class="row"><button class="btn" data-act="addPRow">+ Add row</button><span class="note">New medicine names are added to Medicines automatically. Free qty is added to stock at zero cost. Most medicines are 5% GST since 22 Sep 2025.</span></div>
   </div>
@@ -732,14 +804,14 @@ AFTER.purchase=()=>{
 };
 const purAmt=r=>{const l=purLine(r);return l.base+l.tax};
 function drawPRows(){
-  const f=(i,k,w,type='text',extra='')=>`<input data-i="${i}" data-k="${k}" id="p${k}_${i}" type="${type}" value="${esc(pur.rows[i][k])}" style="width:${w}px" ${extra} aria-label="${k}">`;
-  $('#ptable').innerHTML=`<thead><tr><th>Medicine</th><th>Pack</th><th>HSN</th><th>Batch</th><th>Expiry</th><th class="r">Qty</th><th class="r">Free</th><th class="r">MRP</th><th class="r">Pur. rate</th><th class="r">Disc %</th><th class="r">GST %</th><th class="r">Sale rate</th><th class="r">Amount</th><th></th></tr></thead><tbody>${
-    pur.rows.map((r,i)=>`<tr><td><input data-i="${i}" data-k="name" id="pn_${i}" list="catlist" value="${esc(r.name)}" style="width:200px" autocomplete="off" aria-label="Medicine"></td>
-    <td>${f(i,'pack',80)}</td><td>${f(i,'hsn',70)}</td><td><input data-i="${i}" data-k="batch" id="pb_${i}" value="${esc(r.batch)}" style="width:95px" aria-label="Batch"></td>
-    <td>${f(i,'exp',140,'month')}</td><td>${f(i,'qty',65,'number','min="0"')}</td><td>${f(i,'free',60,'number','min="0"')}</td><td>${f(i,'mrp',80,'number','step="0.01" min="0"')}</td>
-    <td>${f(i,'pur',85,'number','step="0.01" min="0"')}</td><td>${f(i,'disc',60,'number','step="0.01" min="0" max="100"')}</td>
+  const f=(i,k,w,type='text',extra='')=>`<input data-i="${i}" data-k="${k}" id="p${k}_${i}" type="${type}" value="${esc(pur.rows[i][k])}" style="width:${w}px" ${extra} aria-label="${k}">`,F=!!S.settings.purFull,X=h=>F?h:'';
+  $('#ptable').innerHTML=`<thead><tr><th>Medicine</th>${X('<th>Pack</th><th>HSN'+hint('HSN is the tax code printed on the supplier bill. Most medicines use 3004.')+'</th>')}<th>Batch</th><th>Expiry</th><th class="r">Qty</th>${X('<th class="r">Free</th>')}<th class="r">MRP</th><th class="r">Pur. rate${hint('The price you pay the distributor for one pack, before GST.')}</th>${X('<th class="r">Disc %</th><th class="r">GST %</th><th class="r">Sale rate'+hint('Your selling price if lower than MRP. Leave empty to sell at MRP.')+'</th>')}<th class="r">Amount</th><th></th></tr></thead><tbody>${
+    pur.rows.map((r,i)=>`<tr><td><input data-i="${i}" data-k="name" id="pn_${i}" list="catlist" value="${esc(r.name)}" style="width:${F?200:260}px" autocomplete="off" aria-label="Medicine" placeholder="Type medicine name"></td>
+    ${X(`<td>${f(i,'pack',80)}</td><td>${f(i,'hsn',70)}</td>`)}<td><input data-i="${i}" data-k="batch" id="pb_${i}" value="${esc(r.batch)}" style="width:95px" aria-label="Batch"></td>
+    <td>${f(i,'exp',140,'month')}</td><td>${f(i,'qty',65,'number','min="0"')}</td>${X(`<td>${f(i,'free',60,'number','min="0"')}</td>`)}<td>${f(i,'mrp',80,'number','step="0.01" min="0"')}</td>
+    <td>${f(i,'pur',85,'number','step="0.01" min="0"')}</td>${X(`<td>${f(i,'disc',60,'number','step="0.01" min="0" max="100"')}</td>
     <td><select data-i="${i}" data-k="gst" id="pg_${i}" aria-label="GST">${[0,5,12,18].map(g=>`<option ${+r.gst===g?'selected':''}>${g}</option>`).join('')}</select></td>
-    <td>${f(i,'sale',80,'number','step="0.01" min="0" placeholder="= MRP"')}</td><td class="r" id="pa_${i}">${n2(purAmt(r))}</td>
+    <td>${f(i,'sale',80,'number','step="0.01" min="0" placeholder="= MRP"')}</td>`)}<td class="r" id="pa_${i}">${n2(purAmt(r))}</td>
     <td><button class="x" data-act="rmPRow" data-i="${i}" aria-label="Remove row">×</button></td></tr>`).join('')}</tbody>`;
   drawPTotals();
 }
@@ -796,7 +868,8 @@ function drawMeds(){
     <td class="r">${s<=0?'<span class="chip bad">0</span>':(+m.min&&s<=+m.min?`<span class="chip warn">${fmtStock(s,m)}</span>`:fmtStock(s,m))}</td>
     <td>${e?`<span class="chip ${isExpired(e)?'bad':isSoon(e)?'warn':''}">${expF(e)}</span>`:'<span class="sub">—</span>'}</td>
     <td class="r"><button class="btn sm" data-act="medForm" data-id="${m.id}">Edit / stock</button></td></tr>`}).join('')}</tbody>`
-    :'<tbody><tr><td class="empty">No medicines match. Try another search or filter.</td></tr></tbody>';
+    :(S.meds.length?'<tbody><tr><td class="empty">No medicines match. Try another search or filter.</td></tr></tbody>'
+      :`<tbody><tr><td class="empty"><b>No medicines in your shop yet.</b><br>Import your stock list from Excel, add medicines one by one, or just start billing: any of the 2.4 lakh medicines can be billed straight away.<div class="row" style="justify-content:center;margin-top:12px"><button class="btn pri" data-act="importForm">Import from Excel</button><button class="btn" data-act="medForm">+ Add Medicine</button><button class="btn" data-go="bill">Start billing</button></div></td></tr></tbody>`);
 }
 function medFormHTML(m){
   m=m||{gst:5,units:1};const bs=m.id?S.batches.filter(b=>b.medId===m.id):[];
@@ -807,13 +880,13 @@ function medFormHTML(m){
    <label>Company<input id="f_company" value="${esc(m.company||'')}"></label>
    <label class="wide">Salt / composition<input id="f_salt" value="${esc(m.salt||'')}" placeholder="e.g. Paracetamol 650mg (used to suggest substitutes)"></label>
    <label>Pack<input id="f_pack" value="${esc(m.pack||'')}" placeholder="15 TAB"></label>
-   <label>Tablets per strip<input id="f_units" type="number" min="1" step="1" value="${m.units||1}" title="For loose tablet sale. 1 = sell whole packs only"></label>
+   <label>Tablets per strip ${hint('Used for loose tablet sale. Keep 1 if you only sell full packs.')}<input id="f_units" type="number" min="1" step="1" value="${m.units||1}" title="For loose tablet sale. 1 = sell whole packs only"></label>
    <label>Barcode<input id="f_barcode" value="${esc(m.barcode||'')}" placeholder="Scan here"></label>
-   <label>HSN code<input id="f_hsn" value="${esc(m.hsn||'')}" placeholder="3004"></label>
+   <label>HSN code ${hint('Tax code for the product. Most medicines are 3004; devices like syringes 9018.')}<input id="f_hsn" value="${esc(m.hsn||'')}" placeholder="3004"></label>
    <label>GST %<select id="f_gst">${[0,5,12,18].map(g=>`<option ${+m.gst===g?'selected':''}>${g}</option>`).join('')}</select></label>
    <label>MRP per pack (₹)<input id="f_mrp" type="number" min="0" step="0.01" value="${m.mrp??''}"></label>
-   <label>Reorder level<input id="f_min" type="number" min="0" value="${m.min??''}" placeholder="0"></label>
-   <label>Schedule<select id="f_sched">${[['','General (OTC)'],['H','Schedule H'],['H1','Schedule H1'],['X','Schedule X']].map(([v,l])=>`<option value="${v}" ${(m.sched||'')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+   <label>Reorder level ${hint('When stock falls to this number, the medicine shows in Low stock so you remember to order it.')}<input id="f_min" type="number" min="0" value="${m.min??''}" placeholder="0"></label>
+   <label>Schedule ${hint('Schedule H and H1 medicines need a prescription. For H1 and X the bill needs patient and doctor name, and they appear in the H1 register.')}<select id="f_sched">${[['','General (OTC)'],['H','Schedule H'],['H1','Schedule H1'],['X','Schedule X']].map(([v,l])=>`<option value="${v}" ${(m.sched||'')===v?'selected':''}>${l}</option>`).join('')}</select></label>
   </div>
   <div><h3>Stock by batch (in packs)</h3><div class="tw"><table class="t"><thead><tr><th>Batch</th><th>Expiry</th><th>Qty</th><th>Pur. rate</th><th>Sale rate</th></tr></thead><tbody id="f_batches">${bs.map(bRow).join('')}${bRow({})}</tbody></table></div>
   <div class="row" style="margin-top:8px"><button class="btn sm" data-act="addBRow">+ Another batch</button><span class="note">Use this for opening stock or to correct a count. Changes are recorded in the activity log.</span></div></div>
@@ -940,10 +1013,11 @@ function ledgerHTML(p,forPrint){const e=ledgerRows(p);
 
 /* ================= REPORTS ================= */
 let rtab='sales',rfrom=today().slice(0,8)+'01',rto=today();
-const RTABS=[['sales','Sales'],['day','Day close'],['returns','Returns'],['purch','Purchases'],['gst','GST'],['h1','H1 register'],['expiry','Expiry'],['low','Low stock'],['log','Activity']];
+const RTABS=[['sales','Sales'],['day','Day close'],['gst','GST'],['expiry','Expiry'],['low','Low stock']],RMORE=[['returns','Returns'],['purch','Purchases'],['h1','H1 register'],['log','Activity log']];
 V.reports=()=>`<div class="head"><div><h1>Reports</h1></div>
  <div class="row"><label>From<input id="r_from" type="date" value="${rfrom}"></label><label>To${rtab==='day'?' (day to close)':''}<input id="r_to" type="date" value="${rto}"></label></div></div>
- <div class="card stack"><div class="seg">${RTABS.map(([k,l])=>`<button data-act="rtab" data-v="${k}" class="${rtab===k?'on':''}">${l}</button>`).join('')}</div>
+ <div class="card stack"><div class="row" style="justify-content:space-between"><div class="seg">${RTABS.map(([k,l])=>`<button data-act="rtab" data-v="${k}" class="${rtab===k?'on':''}">${l}</button>`).join('')}</div>
+  <div class="morebar"><span>More:</span>${RMORE.map(([k,l])=>`<button class="btn sm" data-act="rtab" data-v="${k}" style="${rtab===k?'border-color:var(--accent);color:var(--accent)':''}">${l}</button>`).join('')}</div></div>
  <div id="rbody"></div></div>`;
 AFTER.reports=()=>{$('#r_from').addEventListener('change',e=>{rfrom=e.target.value;drawReport()});$('#r_to').addEventListener('change',e=>{rto=e.target.value;drawReport()});drawReport()};
 const inRange=d=>d>=rfrom&&d<=rto;
@@ -1011,7 +1085,7 @@ V.settings=()=>{const s=S.settings,used=maxBillNo(s.prefix);return`<div class="h
  <div class="card stack"><h3>Shop details</h3><div class="form">
   <label class="wide">Shop name<input id="s_shop" value="${esc(s.shop)}"></label><label class="wide">Address<input id="s_addr" value="${esc(s.addr)}"></label>
   <label>Phone<input id="s_phone" value="${esc(s.phone)}"></label>
-  <label class="wide">GST type<select id="s_gstType">${[['regular','Regular GST (tax invoice)'],['composition','Composition dealer (bill of supply)'],['unregistered','Not registered for GST']].map(([v,l])=>`<option value="${v}" ${s.gstType===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label class="wide">GST type ${hint('Regular: you have a GSTIN and charge GST. Composition: you pay a small tax on total sales; bills show no GST. Not registered: no GST number.')}<select id="s_gstType">${[['regular','Regular GST (tax invoice)'],['composition','Composition dealer (bill of supply)'],['unregistered','Not registered for GST']].map(([v,l])=>`<option value="${v}" ${s.gstType===v?'selected':''}>${l}</option>`).join('')}</select></label>
   <label>GSTIN<input id="s_gstin" value="${esc(s.gstin)}" maxlength="15" placeholder="03ABCDE1234F1Z5"></label>
   <label class="wide">Drug licence no.<input id="s_dl" value="${esc(s.dl)}" placeholder="20B / 21B numbers"></label>
   <label>Bill title<select id="s_title">${[['auto','Auto (from GST type)'],['TAX INVOICE','TAX INVOICE'],['BILL OF SUPPLY','BILL OF SUPPLY'],['ESTIMATE','ESTIMATE'],['CASH MEMO','CASH MEMO']].map(([v,l])=>`<option value="${v}" ${s.title===v?'selected':''}>${l}</option>`).join('')}</select></label>
@@ -1093,6 +1167,14 @@ function returnFormHTML(s){
 
 /* ================= actions ================= */
 const A={
+  toggleLang:()=>{S.settings.lang=S.settings.lang==='hi'?'en':'hi';save();render();toast(S.settings.lang==='hi'?'भाषा: हिंदी':'Language: English')},
+  setLang:b=>{S.settings.lang=b.dataset.v;const keep=[...document.querySelectorAll('#main input')].map(i=>[i.id,i.value]);render();keep.forEach(([id,v])=>{const e=$('#'+id);if(e)e.value=v})},
+  guideDone:()=>{S.settings.guideDone=true;save();const g=$('#guide');if(g)g.remove();$('#medsearch')?.focus()},
+  purFull:()=>{S.settings.purFull=!S.settings.purFull;save();render()},
+  testPrint:()=>{const st=S.settings,keepShop=st.shop,sh=$('#w_shop');if(sh&&sh.value.trim())st.shop=sh.value.trim();
+    const demo={no:'TEST-0001',date:today(),name:'TEST PRINT',phone:'',doctor:'',type:'Cash',partyId:null,prevBal:0,paid:0,disc:0,
+      items:[{name:'DOLO 650 TABLET',pack:'15 TAB',hsn:'3004',batch:'TEST1',exp:monthAdd(12),qty:2,mrp:30.91,rate:30.91,disc:0,gst:5},{name:'PAN 40 TABLET',pack:'15 TAB',hsn:'3004',batch:'TEST2',exp:monthAdd(18),qty:1,mrp:183,rate:183,disc:0,gst:5}]};
+    const t=saleTotals(demo.items,0);Object.assign(demo,{sub:t.sub,ro:t.ro,total:t.total,gst:t.gst,paid:t.total});doPrint(invoiceHTML(demo));st.shop=keepShop},
   syncNow:()=>cloudSync(true),
   logout:async b=>{
     if(S.sync&&S.sync.dirty){await cloudSync(true);if(S.sync.dirty&&!armed(b)){toast('Some changes are not in the cloud yet. They stay on this computer. Click Log out again to continue.');return}}

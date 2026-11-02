@@ -24,11 +24,11 @@
           <a class="btn pri big" data-start href="app/">Start free</a>
           <a class="btn big" href="#how">See how it works</a>
         </div>
-        <div class="facts"><span>Free forever</span><span>No AMC</span><span>Works offline</span><span>2.4 lakh medicines built in</span></div>
+        <div class="facts"><span>Free forever</span><span>No AMC</span><span>Works offline</span><span>2.4 lakh medicines built in</span><span>हिंदी में भी</span></div>
       </div>
       <figure class="shot" style="margin:0">
         <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
-        <img src="assets/screen-bill.png" width="1280" height="800" alt="Pharmacy Counter billing screen with medicines, batch, expiry and total">
+        <picture><source media="(max-width:640px)" srcset="assets/screen-phone.jpg"><img src="assets/screen-bill.jpg" width="1280" height="800" alt="Pharmacy Counter billing screen with medicines, batch, expiry, total and change to return"></picture>
       </figure>
     </div>
   </section>
@@ -44,6 +44,20 @@
         <div class="feat"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9h16M9 9v11"/></svg></span><h3>Import your stock from Excel</h3><p>Upload your stock list from Marg or any software. Columns are matched automatically. Or use billing-only mode and skip stock completely.</p></div>
         <div class="feat"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg></span><h3>Reports that matter</h3><p>Day close for the cash drawer, GST summary with B2B and B2C, Schedule H1 register, returns and profit.</p></div>
       </div>
+    </div>
+  </section>
+
+  <section id="tour" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head"><span class="eyebrow">See it in action</span><h2>Real screens from the app</h2></div>
+      <div class="tourtabs" role="tablist">
+        <button role="tab" class="on" data-shot="screen-bill">New bill</button>
+        <button role="tab" data-shot="screen-home">Home</button>
+        <button role="tab" data-shot="screen-dayclose">Day close</button>
+        <button role="tab" data-shot="screen-hindi">हिंदी</button>
+      </div>
+      <figure class="shot tourshot" style="margin:14px 0 0"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div><img id="tourimg" src="assets/screen-bill.jpg" width="1280" height="800" loading="lazy" alt="Billing screen"></figure>
+      <p class="muted small" id="tourcap" style="margin-top:10px">Bill with medicines, batch and expiry, and change to return. Sample data.</p>
     </div>
   </section>
 
@@ -92,9 +106,22 @@
   </section>
 
   <section style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head"><span class="eyebrow">Questions</span><h2>What chemists ask first</h2></div>
+      <div class="faq">
+        <details><summary>Is it really free?</summary><p>Yes. Billing, stock, udhaar, GST reports and printing are free for a single store, with no AMC. Pro features for bigger shops will be paid later.</p></details>
+        <details><summary>Do I have to enter all my stock first?</summary><p>No. Choose "Billing only" and bill any of the 2.4 lakh medicines today. You can import your stock from Excel later.</p></details>
+        <details><summary>What if the internet goes off?</summary><p>Billing keeps working. Your records are saved on your computer and go to the cloud when the internet is back.</p></details>
+        <details><summary>Will it work with my printer?</summary><p>Yes: A4, A5 and 2 or 3 inch thermal printers. Setup has a "Print a test bill" button to check.</p></details>
+        <details><summary>Who can see my data?</summary><p>Only you. Each shop's bills, stock and patients are locked to its own login. <a href="help.html#privacy">More about privacy</a>.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
     <div class="wrap cta">
       <h2>Start billing today. It's free.</h2>
-      <p class="lead">Beta version: we are adding features every week based on what chemists ask for.</p>
+      <p class="lead">This is a free beta. We help every beta shop set up personally, and add features every week based on what chemists ask for.</p>
       <div class="row" style="justify-content:center"><a class="btn pri big" data-start href="app/">Start free</a><a class="btn big" data-wa="Hi, I want help setting up Pharmacy Counter in my shop." href="#">Get help on WhatsApp</a></div>
     </div>
   </section>
@@ -105,5 +132,9 @@
 <script src="assets/config.js"></script>
 <script src="assets/cloud.js"></script>
 <script src="assets/site.js"></script>
+<script>
+(function(){const cap={'screen-bill':'Bill with medicines, batch and expiry, and change to return. Sample data.','screen-home':"Home: today's sales, udhaar to collect, expiry and low-stock alerts. Sample data.",'screen-dayclose':'Day close: what should be in your cash drawer, UPI and udhaar for the day. Sample data.','screen-hindi':'The same bill screen in Hindi. Switch language anytime from the menu.'};
+document.querySelectorAll('.tourtabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tourtabs button').forEach(x=>x.classList.toggle('on',x===b));const i=document.getElementById('tourimg');i.src='assets/'+b.dataset.shot+'.jpg';i.alt=b.textContent+' screen';document.getElementById('tourcap').textContent=cap[b.dataset.shot]})})();
+</script>
 </body>
 </html>
