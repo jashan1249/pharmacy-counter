@@ -29,7 +29,7 @@
   document.querySelectorAll('[data-wa]').forEach(el => {
     if (cfg.whatsapp) el.href = 'https://wa.me/' + cfg.whatsapp + '?text=' + encodeURIComponent(el.dataset.wa);
     else if (cfg.supportEmail) el.href = 'mailto:' + cfg.supportEmail + '?subject=' + encodeURIComponent(el.dataset.wa);
-    else el.hidden = true;
+    else if (el.getAttribute('href') === '#') el.hidden = true;
   });
   document.querySelectorAll('[data-start]').forEach(el => {
     el.href = loggedIn ? 'app/' : (window.PCCloud && PCCloud.enabled() ? 'login.html#signup' : 'app/');

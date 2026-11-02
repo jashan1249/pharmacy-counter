@@ -176,6 +176,41 @@ table.t{width:100%;border-collapse:collapse;font-size:14px}
 .rc .g{font-size:14px;font-weight:700}
 .rc .s{font-size:9.5px}
 #printArea{display:none}
+.dash{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+@media (max-width:980px){.dash{grid-template-columns:minmax(0,1fr)}}
+.sales{display:grid;gap:12px}
+.sales .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.sales .big{font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:13.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg);color:var(--muted)}
+.delta.up{background:var(--accent-soft);color:var(--accent)} .delta.down{background:var(--warn-soft);color:var(--warn)}
+.mini{display:flex;gap:22px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)} .mini b{display:block;font-size:17px;color:var(--fg);font-variant-numeric:tabular-nums}
+.chart{position:relative}
+.bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;height:150px;align-items:end;border-bottom:1px solid var(--line);padding-top:18px}
+.bars .col{position:relative;height:100%;display:flex;align-items:flex-end;justify-content:center;cursor:default}
+.bars .bar{width:min(100%,46px);background:var(--accent);opacity:.32;border-radius:4px 4px 0 0;transition:opacity .15s}
+.bars .col.today .bar{opacity:1}
+.bars .col:hover .bar{opacity:.75}
+.bars .val{position:absolute;left:-6px;right:-6px;text-align:center;font-size:11.5px;font-weight:600;padding-bottom:3px;white-space:nowrap}
+.blabels{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;font-size:11.5px;color:var(--muted);text-align:center;margin-top:5px}
+.ctip{position:absolute;pointer-events:none;background:var(--fg);color:var(--surface);font-size:12.5px;padding:6px 9px;border-radius:7px;white-space:nowrap;transform:translate(-50%,-100%);z-index:5}
+.split{display:grid;gap:12px}
+.srow{display:grid;grid-template-columns:76px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:14px}
+.srow .track{display:block;height:10px;border-radius:6px;background:var(--bg);overflow:hidden}
+.srow .fill{display:block;height:100%;border-radius:6px;background:var(--accent);min-width:3px}
+.srow .amt{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.toplist{display:grid;gap:8px;margin:0;padding:0;list-style:none;font-size:14px}
+.toplist li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.toplist li:last-child{border-bottom:0}
+.tile{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-items:center}
+.tile .ti{grid-row:span 3;width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.tile .ti svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tile{min-width:0}.tile .v{overflow-wrap:anywhere}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{display:block;padding:12px}.tile .ti{width:30px;height:30px;margin-bottom:6px}.bars,.blabels{gap:5px}.tile .v{font-size:19px}.tile .s{font-size:12px}.sales .big{font-size:30px}.srow{grid-template-columns:58px minmax(0,1fr) 84px}}
+.tile.warn .ti{background:var(--warn-soft);color:var(--warn)} .tile.bad .ti{background:var(--bad-soft);color:var(--bad)}
+.card{box-shadow:0 1px 2px rgba(15,40,30,.05)}
+.totals .tl.big{background:var(--accent-soft);border-top:0;border-radius:10px;padding:12px 14px;margin-top:4px}
+.totals .tl.big span:last-child{color:var(--accent)}
+.custinfo .chip{font-size:13px}
 .hint{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:11px;font-weight:700;cursor:help;position:relative;margin-left:4px;vertical-align:1px}
 .hint:hover::after,.hint:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:max-content;max-width:240px;background:var(--fg);color:var(--surface);font-size:12.5px;font-weight:500;line-height:1.4;padding:7px 10px;border-radius:7px;white-space:normal;z-index:30;text-align:left}
 .guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:12px;align-items:center;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:14px}
@@ -495,6 +530,12 @@ function seed(){
     const t=saleTotals(items,0),prev=p?balance(p):0;
     S.sales.push({id:uid(),no:S.settings.prefix+pad(S.settings.nextNo++),date,partyId:p?p.id:null,name:p?p.name:'Walk-in',phone:p?p.phone:'',doctor:'',type,
       disc:0,sub:t.sub,ro:t.ro,total:t.total,paid:type==='Credit'?0:t.total,prevBal:prev,gst:t.gst,items})};
+  // a week of sample history so the dashboard shows what daily use looks like (sample data, removable)
+  let seedN=7;const rnd=()=>(seedN=(seedN*9301+49297)%233280)/233280;
+  const pool=[dolo,dolo,dolo,pan,ors,ors,vol,calpol];
+  for(let d=6;d>=1;d--){const n=4+Math.floor(rnd()*6);for(let k=0;k<n;k++){const lines=[];const c=1+Math.floor(rnd()*2);
+    for(let j=0;j<c;j++){const m=pool[Math.floor(rnd()*pool.length)];if(!lines.some(l=>l[0]===m))lines.push([m,1])}
+    if(lines.every(([m,q])=>S.batches.some(x=>x.medId===m.id&&x.qty>=q+2&&!isExpired(x.exp))))mk(rnd()<.15?ram:null,rnd()<.3?'UPI':'Cash',lines,daysAgo(d))}}
   mk(svm,'Credit',[[syr,2],[ndl,1],[glu,1]],daysAgo(1));
   mk(null,'Cash',[[dolo,2],[ors,3]],today());
   mk(ram,'UPI',[[pan,1],[vol,1]],today());
@@ -553,16 +594,17 @@ V.home=()=>{
   const pay=S.parties.filter(p=>p.type==='supplier').reduce((a,p)=>a+Math.max(0,balance(p)),0);
   const ex=billingOnly()?[]:expiryList(),low=billingOnly()?[]:lowStock(),recent=[...S.sales].reverse().slice(0,6);
   const needBk=!CLOUD&&!S.sample&&backupState!=='on'&&(!lastBackup||Date.now()-Date.parse(lastBackup)>864e5);
-  const tile=(k,v,s,cls,go,tab)=>`<button class="tile ${cls}" data-go="${go}" ${tab?`data-tab="${tab}"`:''}><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></button>`;
+  const TI={collect:'<path d="M3 7h18v12H3zM3 11h18M7 15h3"/>',pay:'<path d="M12 3v18M7 8l5-5 5 5"/>',exp:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',low:'<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4"/>',bills:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6"/>'};
+  const tile=(k,v,s,cls,go,tab,ic)=>`<button class="tile ${cls}" data-go="${go}" ${tab?`data-tab="${tab}"`:''}><span class="ti"><svg viewBox="0 0 24 24">${TI[ic]||''}</svg></span><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></button>`;
   return`${needBk?`<div class="banner"><span><b>Your records were not backed up today.</b> If this computer's browser data is cleared, unsaved records are lost.</span><span class="row"><button class="btn sm pri" data-act="backup">Download backup</button><button class="btn sm" data-go="settings">Set up auto backup</button></span></div>`:''}
   ${checklist()}
   <div class="head"><div><h1>${esc(S.settings.shop)}</h1><p class="muted">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p></div>
    <div class="row"><button class="btn pri big" data-go="bill">+ New Bill</button><button class="btn big" data-go="purchase">+ Purchase Entry</button></div></div>
+  ${dashHTML()}
   <div class="tiles">
-   ${tile("Today's sales",money(tsum),ts.length+' bills','','reports','day')}
-   ${tile('To collect',money(coll),'from customers',coll>0?'warn':'','parties')}
-   ${tile('To pay',money(pay),'to suppliers','','parties')}
-   ${billingOnly()?tile('Bills this month',S.sales.filter(s=>!s.cancelled&&s.date.slice(0,7)===t.slice(0,7)).length,'stock tracking is off','','reports','sales'):tile('Expiry alerts',ex.length,'batches expired or within 3 months',ex.length?'bad':'','reports','expiry')+tile('Low stock',low.length,'medicines to reorder',low.length?'warn':'','reports','low')}
+   ${tile('To collect',money(coll),'udhaar from customers',coll>0?'warn':'','parties','','collect')}
+   ${tile('To pay',money(pay),'to suppliers','','parties','','pay')}
+   ${billingOnly()?tile('Bills this month',S.sales.filter(s=>!s.cancelled&&s.date.slice(0,7)===t.slice(0,7)).length,'stock tracking is off','','reports','sales','bills'):tile('Expiry alerts',ex.length,'batches expired or within 3 months',ex.length?'bad':'','reports','expiry','exp')+tile('Low stock',low.length,'medicines to reorder',low.length?'warn':'','reports','low','low')}
   </div>
   <div class="two">
    <section class="card"><h3>Recent bills</h3>${recent.length?`<div class="tw"><table class="t"><tbody>${recent.map(s=>`<tr class="${s.cancelled?'cancel':''}"><td>${esc(s.no)}<div class="sub">${dmy(s.date)}</div></td><td>${esc(s.name)}</td><td><span class="chip ${s.type==='Credit'?'warn':''}">${s.type}</span></td><td class="r">${money(s.total)}</td><td class="r"><button class="btn sm" data-act="viewBill" data-id="${s.id}">View</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No bills yet. Press New Bill (F2) to make the first one.</div>'}</section>
@@ -572,6 +614,35 @@ V.home=()=>{
    </tbody></table></div>`:'<div class="empty">All good. No expiring or low-stock medicines.</div>'}</section>
   </div>`;
 };
+
+function dashHTML(){
+  const ok=S.sales.filter(s=>!s.cancelled),t=today(),days=[...Array(7)].map((_,i)=>daysAgo(6-i));
+  const byDay=d=>ok.filter(s=>s.date===d),sum=a=>a.reduce((x,s)=>x+s.total,0);
+  const vals=days.map(d=>sum(byDay(d))),tv=vals[6],yv=vals[5],tb=byDay(t).length;
+  const pct=yv?Math.round((tv-yv)/yv*100):null;
+  const delta=pct===null?`<span class="delta">No sales yesterday</span>`:`<span class="delta ${pct>=0?'up':'down'}">${pct>=0?'▲':'▼'} ${Math.abs(pct)}% vs yesterday</span>`;
+  const week=sum(ok.filter(s=>days.includes(s.date))),wb=ok.filter(s=>days.includes(s.date)).length;
+  const max=Math.max(...vals,1);
+  const nice=v=>v>=1000?'₹'+(v/1000).toFixed(v>=10000?0:1)+'k':'₹'+Math.round(v);
+  const bars=days.map((d,i)=>{const h=vals[i]?Math.max(vals[i]/max*100,3):0;
+    return`<div class="col ${i===6?'today':''}" data-tip="${dmy(d)} · ${money(vals[i])} · ${byDay(d).length} bills"><div class="bar" style="height:${h.toFixed(1)}%"></div>${vals[i]&&(i===6||vals[i]===max)?`<span class="val" style="bottom:${h.toFixed(1)}%">${nice(vals[i])}</span>`:''}</div>`}).join('');
+  const labels=days.map((d,i)=>`<span>${i===6?'Today':new Date(d+'T00:00').toLocaleDateString('en-IN',{weekday:'short'})}</span>`).join('');
+  const tw=ok.filter(s=>days.includes(s.date)),paid=(f)=>tw.reduce((a,s)=>a+f(s),0);
+  const cash=paid(s=>s.type==='Cash'?s.total:(s.type==='Credit'?+s.paid||0:0)),upi=paid(s=>s.type==='UPI'?s.total:0),udh=paid(s=>s.type==='Credit'?s.total-(+s.paid||0):0),tot=Math.max(cash+upi+udh,1);
+  const srow=(l,v)=>`<div class="srow"><span>${l}</span><span class="track"><span class="fill" style="width:${(v/tot*100).toFixed(1)}%"></span></span><span class="amt">${money(v)}</span></div>`;
+  const cnt={};tw.forEach(s=>s.items.forEach(i=>{cnt[i.name]=(cnt[i.name]||0)+lineAmt(i)}));
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  return`<div class="dash">
+   <section class="card sales"><div class="top"><div><div class="note">Today's sales so far</div><div class="big">${money(tv)}</div></div>${delta}</div>
+    <div class="mini"><span>Bills today<b>${tb}</b></span><span>Average bill<b>${money(tb?tv/tb:0)}</b></span><span>Last 7 days<b>${money(week)}</b></span><span>Bills in 7 days<b>${wb}</b></span></div>
+    <div class="chart" id="chart" role="img" aria-label="Sales for the last 7 days: ${days.map((d,i)=>dmy(d)+' '+money(vals[i])).join(', ')}"><div class="bars">${bars}</div><div class="blabels">${labels}</div><div class="ctip" id="ctip" hidden></div></div></section>
+   <section class="card stack" style="gap:16px"><div><h3 style="margin-bottom:12px">Money in, last 7 days</h3><div class="split">${srow('Cash',cash)}${srow('UPI',upi)}${srow('Udhaar',udh)}</div></div>
+    <div><h3 style="margin-bottom:10px">Top medicines, 7 days</h3>${top.length?`<ul class="toplist">${top.map(([n,v])=>`<li><span>${esc(n)}</span><b>${money(v)}</b></li>`).join('')}</ul>`:'<p class="note">Your best sellers will show here after a few bills.</p>'}</div></section>
+  </div>`;
+}
+AFTER.home=()=>{const c=$('#chart'),tip=$('#ctip');if(!c)return;
+  c.addEventListener('mousemove',e=>{const col=e.target.closest('.col');if(!col){tip.hidden=true;return}const b=col.querySelector('.bar');b.dataset.tip=col.dataset.tip;const r=c.getBoundingClientRect(),br=b.getBoundingClientRect();tip.textContent=b.dataset.tip;tip.style.left=(br.left+br.width/2-r.left)+'px';tip.style.top=(br.top-r.top-6)+'px';tip.hidden=false});
+  c.addEventListener('mouseleave',()=>tip.hidden=true)};
 
 /* ================= NEW BILL ================= */
 function checklist(){
