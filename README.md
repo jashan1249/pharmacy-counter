@@ -1,26 +1,37 @@
 # Pharmacy Counter (Beta)
 
-Free billing and stock software for neighbourhood medical shops in India. It runs entirely in the browser: no server, no login, works offline once opened.
+Free billing and stock software for neighbourhood medical stores in India.
 
-**Live beta:** https://jashan1249.github.io/pharmacy-counter/
+**Website:** https://jashan1249.github.io/pharmacy-counter/
+**App:** https://jashan1249.github.io/pharmacy-counter/app/
 
-## Features
-- Fast billing: search by name, salt or barcode; loose tablet sale; cash, UPI and credit (udhaar)
-- Billing-only mode (no stock needed) or full stock with batch and expiry
-- Import stock from Excel (.xlsx) or CSV, with automatic column matching
-- Built-in database of 2.4 lakh Indian medicines
-- GST tax invoice, composition (bill of supply) or unregistered; A4, A5 and thermal printing
-- Returns and credit notes, bill edit, Schedule H1 register, day close, GST report
-- WhatsApp bills and payment reminders
-- Auto backup to a folder, daily copies in the browser, day/night theme
+## What's here
+| Path | What it is |
+|---|---|
+| `index.html`, `pricing.html`, `help.html` | Public website |
+| `login.html` | Log in, create account, reset password |
+| `admin.html` | Owner panel: every shop, usage, plan (admins only) |
+| `app/index.html` | The billing app (built file, do not edit by hand) |
+| `src/app.html` | App source |
+| `assets/config.js` | Supabase keys and WhatsApp number |
+| `assets/cloud.js` | Login and cloud sync client (Supabase REST, no library) |
+| `supabase/schema.sql` | Database tables and security rules |
+| `dist/standalone.html` | Offline single-file version with no login |
+| `data/catalog.b64` | Compressed database of 2.4 lakh Indian medicines |
 
-## Data and privacy
-All shop data stays in the browser on the device (IndexedDB). Nothing is sent to any server. Testers should set up the auto-backup folder in Settings.
+## How data works
+- The app is offline-first: records are saved in the browser (IndexedDB) and billing never waits for the internet.
+- With accounts switched on, each shop's records sync to Supabase after changes, and a daily copy is kept for 14 days.
+- Database rules let each login read and write only its own shop. Admins see shop details and usage counts, never bills or patients.
+- Two computers on one account merge their records by ID; the newer copy wins when the same record changed on both.
+
+## Switching on accounts
+Follow [SETUP.md](SETUP.md). Until then the site runs in local mode with no login.
 
 ## Development
-- `src/app.html` is the app source.
-- `data/catalog.b64` is the compressed medicine database.
-- Run `python3 tools/build.py` to produce `index.html`, the file GitHub Pages serves.
+```
+python3 tools/build.py   # builds app/index.html and dist/standalone.html from src/app.html
+```
 
 ## Credits
-Medicine data: [Indian Medicine Dataset](https://github.com/junioralive/Indian-Medicine-Dataset) by JuniorAlive, MIT License (see `data/MEDICINE-DATASET-LICENSE.txt`). Prices in the dataset are for reference only; always check the MRP on the pack.
+Medicine data: [Indian Medicine Dataset](https://github.com/junioralive/Indian-Medicine-Dataset) by JuniorAlive, MIT License (`data/MEDICINE-DATASET-LICENSE.txt`). Prices are for reference only; always check the MRP on the pack.

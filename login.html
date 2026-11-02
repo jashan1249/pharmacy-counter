@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Log in · Pharmacy Counter</title>
+<link rel="icon" href="assets/icon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="login">
+<header class="top" id="top"></header>
+<main>
+<section>
+  <div class="wrap">
+    <div class="authbox" id="box">
+      <div id="off" hidden>
+        <h2 style="font-size:24px">Accounts are coming soon</h2>
+        <p class="muted" style="margin-top:8px">You can use Pharmacy Counter right now without an account. Your records are saved on this computer.</p>
+        <p style="margin-top:14px"><a class="btn pri" href="app/">Open the app</a></p>
+      </div>
+      <div id="on" style="display:grid;gap:16px">
+        <div class="tabs" role="tablist"><button id="t_login" role="tab" class="on">Log in</button><button id="t_signup" role="tab">Create account</button></div>
+        <div id="msg" class="msg" hidden role="status"></div>
+
+        <form id="f_login">
+          <label>Email<input id="l_email" type="email" autocomplete="email" required></label>
+          <label>Password<input id="l_pw" type="password" autocomplete="current-password" required></label>
+          <button class="btn pri big" type="submit">Log in</button>
+          <p class="small muted"><button type="button" class="linkbtn" id="forgot">Forgot password?</button></p>
+        </form>
+
+        <form id="f_signup" hidden>
+          <label>Shop name<input id="s_shop" autocomplete="organization" required placeholder="e.g. Bansal Medical Hall"></label>
+          <div class="row" style="gap:12px;display:grid;grid-template-columns:1fr 1fr">
+            <label>Mobile number<input id="s_phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="10 digits"></label>
+            <label>City / town<input id="s_city" autocomplete="address-level2" required></label>
+          </div>
+          <label>Email<input id="s_email" type="email" autocomplete="email" required></label>
+          <label>Password<input id="s_pw" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters"></label>
+          <button class="btn pri big" type="submit">Create free account</button>
+          <p class="small muted">Free forever for billing. We never sell your data or your patients' data.</p>
+        </form>
+
+        <form id="f_forgot" hidden>
+          <p class="muted">Enter your email and we'll send a link to set a new password.</p>
+          <label>Email<input id="fg_email" type="email" autocomplete="email" required></label>
+          <button class="btn pri big" type="submit">Send reset link</button>
+          <p class="small"><button type="button" class="linkbtn" id="backlogin">Back to log in</button></p>
+        </form>
+
+        <form id="f_reset" hidden>
+          <h2 style="font-size:22px">Set a new password</h2>
+          <label>New password<input id="r_pw" type="password" autocomplete="new-password" minlength="6" required></label>
+          <button class="btn pri big" type="submit">Save password and open app</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<footer id="foot"></footer>
+<script src="assets/config.js"></script>
+<script src="assets/cloud.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const next = new URLSearchParams(location.search).get('next');
+  const goApp = () => location.replace(next === 'admin' ? 'admin.html' : 'app/');
+  if (!PCCloud.enabled()) { $('#off').hidden = false; $('#on').hidden = true; $('#on').style.display = 'none'; return; }
+  const forms = ['login', 'signup', 'forgot', 'reset'];
+  function show(which) {
+    forms.forEach(f => $('#f_' + f).hidden = f !== which);
+    $('#t_login').classList.toggle('on', which === 'login' || which === 'forgot');
+    $('#t_signup').classList.toggle('on', which === 'signup');
+    $('.tabs').hidden = which === 'reset';
+    msg();
+    const first = $('#f_' + which + ' input'); if (first) first.focus();
+  }
+  function msg(text, kind) { const m = $('#msg'); m.hidden = !text; m.textContent = text || ''; m.className = 'msg ' + (kind || 'err'); }
+  function busy(form, on) { const b = form.querySelector('button[type=submit]'); b.disabled = on; b.dataset.t = b.dataset.t || b.textContent; b.textContent = on ? 'Please wait…' : b.dataset.t; }
+
+  // Arriving from an email link (password reset or email confirmation)
+  const fromHash = PCCloud.takeSessionFromHash();
+  if (fromHash) {
+    history.replaceState(null, '', location.pathname + location.search);
+    PCCloud.adoptSession(fromHash.s).then(() => {
+      if (fromHash.type === 'recovery') show('reset');
+      else { msg('Email confirmed. Opening your app…', 'ok'); setTimeout(goApp, 800); }
+    }).catch(() => { show('login'); msg('That link has expired. Please log in or request a new link.'); });
+  } else if (PCCloud.session()) { goApp(); return; }
+  else show(location.hash === '#signup' ? 'signup' : 'login');
+
+  $('#t_login').onclick = () => show('login');
+  $('#t_signup').onclick = () => show('signup');
+  $('#forgot').onclick = () => { $('#fg_email').value = $('#l_email').value; show('forgot'); };
+  $('#backlogin').onclick = () => show('login');
+
+  $('#f_login').onsubmit = async e => {
+    e.preventDefault(); busy(e.target, true);
+    try { await PCCloud.signIn($('#l_email').value.trim(), $('#l_pw').value); goApp(); }
+    catch (err) { msg(err.message); } finally { busy(e.target, false); }
+  };
+  $('#f_signup').onsubmit = async e => {
+    e.preventDefault();
+    const phone = $('#s_phone').value.replace(/\D/g, '');
+    if (phone.length < 10) return msg('Please enter a 10-digit mobile number.');
+    busy(e.target, true);
+    try {
+      const r = await PCCloud.signUp($('#s_email').value.trim(), $('#s_pw').value,
+        { shop_name: $('#s_shop').value.trim(), phone, city: $('#s_city').value.trim() });
+      if (r.session) goApp();
+      else { show('login'); $('#l_email').value = $('#s_email').value.trim(); msg('Account created. We sent a confirmation link to your email. Click it, then log in here. Check your spam folder too.', 'ok'); }
+    } catch (err) { msg(err.message); } finally { busy(e.target, false); }
+  };
+  $('#f_forgot').onsubmit = async e => {
+    e.preventDefault(); busy(e.target, true);
+    try { await PCCloud.recover($('#fg_email').value.trim(), location.origin + location.pathname); msg('If this email has an account, a reset link is on its way. Check your inbox and spam folder.', 'ok'); }
+    catch (err) { msg(err.message); } finally { busy(e.target, false); }
+  };
+  $('#f_reset').onsubmit = async e => {
+    e.preventDefault(); busy(e.target, true);
+    try { await PCCloud.updatePassword($('#r_pw').value); msg('Password saved. Opening your app…', 'ok'); setTimeout(goApp, 700); }
+    catch (err) { msg(err.message); } finally { busy(e.target, false); }
+  };
+})();
+</script>
+</body>
+</html>

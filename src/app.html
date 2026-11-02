@@ -202,6 +202,7 @@ body.large{zoom:1.15}
 <div id="modal" hidden></div>
 <div id="toast" hidden></div>
 <div id="printArea"></div>
+<!--CLOUD-->
 <datalist id="catlist"></datalist>
 <script id="catalog" type="text/plain">__CATALOG__</script>
 
@@ -233,6 +234,8 @@ const qtyLabel=it=>it.loose?`${it.qty} ${it.unitName||'tab'}`:String(it.qty);
 /* ================= storage: IndexedDB with daily snapshots ================= */
 const LEGACY_KEY='pharmacy_counter_v1';
 let idb=null,S=null,lastBackup=null,dirHandle=null,backupState='none';
+const CLOUD=!!(window.PCCloud&&PCCloud.enabled());
+let STATE_KEY='state',SNAP='snap-',cloudStatus={state:'idle',at:null,msg:''},syncT=null,syncing=false;
 function idbOpen(){return new Promise((res,rej)=>{try{const r=indexedDB.open('pharmacy_counter',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
 function idbReq(mode,fn){return new Promise((res,rej)=>{const tx=idb.transaction('kv',mode),r=fn(tx.objectStore('kv'));let out;if(r)r.onsuccess=()=>out=r.result;tx.oncomplete=()=>res(out);tx.onerror=tx.onabort=()=>rej(tx.error)})}
 const idbGet=k=>idbReq('readonly',s=>s.get(k));
@@ -242,17 +245,20 @@ const idbKeys=()=>idbReq('readonly',s=>s.getAllKeys());
 let chain=Promise.resolve(),bkT;
 function save(){
   S.updated=Date.now();
-  chain=chain.then(()=>idb?idbSet('state',S):localStorage.setItem(LEGACY_KEY,JSON.stringify(S)))
+  if(window.__lastSync&&S.sync!==window.__lastSync)S.sync={...window.__lastSync}; // keep cloud position when records are replaced (restore, wipe)
+  S.sync=S.sync||{};S.sync.dirty=true;window.__lastSync=S.sync;
+  if(CLOUD){clearTimeout(syncT);syncT=setTimeout(cloudSync,6000)}
+  chain=chain.then(()=>idb?idbSet(STATE_KEY,S):localStorage.setItem(LEGACY_KEY,JSON.stringify(S)))
     .catch(e=>{console.error(e);toast('Could not save. Download a backup from Settings now.')});
   clearTimeout(bkT);bkT=setTimeout(autoBackup,3000);
 }
 async function snapshotToday(){
-  if(!idb)return;const keys=(await idbKeys()).map(String),k='snap-'+today();
+  if(!idb)return;const keys=(await idbKeys()).map(String),k=SNAP+today();
   if(!keys.includes(k))await idbSet(k,S);
-  const snaps=keys.concat(k).filter(x=>x.startsWith('snap-')).sort();
+  const snaps=keys.concat(k).filter(x=>x.startsWith(SNAP)).sort();
   for(const old of [...new Set(snaps)].slice(0,-7))await idbDel(old);
 }
-async function markBackup(){lastBackup=new Date().toISOString();if(idb)try{await idbSet('lastBackup',lastBackup)}catch(e){}drawNav()}
+async function markBackup(){lastBackup=new Date().toISOString();if(idb)try{await idbSet(STATE_KEY+':lastBackup',lastBackup)}catch(e){}drawNav()}
 async function writeBackupFile(){const fh=await dirHandle.getFileHandle(`pharmacy-backup-${today()}.json`,{create:true});const w=await fh.createWritable();await w.write(JSON.stringify(S));await w.close();await markBackup()}
 async function autoBackup(){
   if(!dirHandle)return;
@@ -260,6 +266,53 @@ async function autoBackup(){
     await writeBackupFile();backupState='on'}catch(e){backupState='paused'}
   drawNav();
 }
+/* ================= cloud sync (Supabase) ================= */
+const MERGE_ARRAYS=['meds','batches','parties','sales','returns','purchases','payments'];
+function mergeStates(a,b){ // a, b = two versions; newer one wins on the same record
+  const newer=(+a.updated||0)>=(+b.updated||0)?a:b,older=newer===a?b:a,out=JSON.parse(JSON.stringify(newer));
+  for(const k of MERGE_ARRAYS){const have=new Set((out[k]||[]).map(x=>x.id));for(const x of (older[k]||[]))if(x&&x.id&&!have.has(x.id))(out[k]=out[k]||[]).push(x)}
+  const lk=new Set((out.log||[]).map(e=>e.t+e.text));for(const e of (older.log||[]))if(!lk.has(e.t+e.text))(out.log=out.log||[]).push(e);
+  (out.log||[]).sort((x,y)=>x.t.localeCompare(y.t));
+  out.settings.nextNo=Math.max(+a.settings.nextNo||1,+b.settings.nextNo||1);out.settings.cnNo=Math.max(+a.settings.cnNo||1,+b.settings.cnNo||1);
+  out.sample=!!(a.sample&&b.sample);return out;
+}
+function setCloud(state,msg){cloudStatus={state,at:state==='ok'?new Date():cloudStatus.at,msg:msg||''};drawNav()}
+function packForCloud(){const c=JSON.parse(JSON.stringify(S));delete c.sync;return c}
+async function cloudSync(force){
+  if(!CLOUD||!S||syncing)return;if(!force&&!(S.sync&&S.sync.dirty))return;
+  if(!navigator.onLine){setCloud('offline');return}
+  syncing=true;setCloud('saving');
+  try{
+    const remoteAt=await PCCloud.getShopUpdated();
+    if(remoteAt&&(!S.sync.at||Date.parse(remoteAt)>Date.parse(S.sync.at))){
+      const r=await PCCloud.getShopData();
+      if(r&&r.data&&r.data.meds){const keepSync=S.sync;S=mergeStates(S,r.data);S.sync=keepSync;migrate();if(view!=='bill')render();toast('Changes from your other device were added.')}
+    }
+    S.sync.dirty=false;
+    const at=await PCCloud.putShopData(packForCloud(),navigator.userAgent.slice(0,80));
+    S.sync.at=at;
+    if(S.sync.backupDay!==today()){try{await PCCloud.putBackup(today(),packForCloud());S.sync.backupDay=today()}catch(e){}}
+    const bc=S.sales.filter(x=>!x.cancelled).length;if(!S.sync.statsAt||S.sync.statsBills!==bc||Date.now()-S.sync.statsAt>6e5){try{await PCCloud.updateProfile({last_seen:new Date().toISOString(),bills_count:S.sales.filter(x=>!x.cancelled).length,meds_count:S.meds.length,app_version:'beta-2',shop_name:S.settings.shop,phone:S.settings.phone});S.sync.statsAt=Date.now();S.sync.statsBills=bc}catch(e){}}
+    await (chain=chain.then(()=>idbSet(STATE_KEY,S)));
+    lastBackup=new Date().toISOString();setCloud('ok');
+  }catch(e){
+    S.sync.dirty=true;
+    if(e&&e.status===401){setCloud('login','Please log in again to keep saving to the cloud.')}
+    else setCloud('error',e&&e.status===0?'No internet. Saved on this computer; will sync when online.':'Could not save to the cloud. Will retry.');
+    clearTimeout(syncT);syncT=setTimeout(cloudSync,60000);
+  }finally{syncing=false}
+}
+window.addEventListener('online',()=>cloudSync(true));
+window.addEventListener('offline',()=>{if(CLOUD)setCloud('offline')});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&CLOUD&&S&&S.sync&&S.sync.dirty)cloudSync()});
+window.addEventListener('beforeunload',e=>{if(CLOUD&&S&&S.sync&&S.sync.dirty&&navigator.onLine){cloudSync();e.preventDefault();e.returnValue=''}});
+function cloudBox(){
+  const u=PCCloud.user()||{},st=cloudStatus.state,t=cloudStatus.at?cloudStatus.at.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+  const line={ok:`Saved to cloud ${t}`,saving:'Saving to cloud…',offline:'Offline · saved on this device',error:cloudStatus.msg,login:cloudStatus.msg,idle:S&&S.sync&&S.sync.dirty?'Waiting to sync':(t?`Saved to cloud ${t}`:'Connected')}[st]||'';
+  const cls=st==='ok'||st==='idle'?'ok':'warn';
+  return`<div class="bk ${cls}"><span><b title="${esc(u.email||'')}">${esc((u.email||'').split('@')[0])}</b><br>${esc(line)}</span><span class="row" style="gap:6px">${st==='login'?'<a class="btn sm pri" href="../login.html?next=app">Log in</a>':'<button class="btn sm" data-act="syncNow">Sync now</button>'}<button class="btn sm" data-act="logout">Log out</button></span></div>`;
+}
+
 function logEv(text){S.log=S.log||[];S.log.push({t:new Date().toISOString(),text});if(S.log.length>500)S.log.splice(0,S.log.length-500)}
 
 function blankState(){return{v:2,settings:{shop:'My Medical Store',addr:'Main Bazar, Mansa, Punjab',phone:'98XXXXXXXX',gstin:'',dl:'',gstType:'regular',prefix:'INV-',nextNo:1,cnNo:1,
@@ -392,6 +445,7 @@ const NAV=[['home','Home',''],['bill','New Bill','F2'],['purchase','Purchase','F
 let view='home';
 function backupBox(){
   if(!S)return'';
+  if(CLOUD)return cloudBox();
   if(dirHandle&&backupState==='on')return`<div class="bk ok"><span><b>Auto backup on</b><br>Last saved ${timeAgo(lastBackup)}</span></div>`;
   if(dirHandle)return`<div class="bk warn"><span><b>Auto backup paused</b><br>Click to allow saving to your backup folder.</span><button class="btn sm" data-act="resumeBackup">Resume backup</button></div>`;
   const old=!lastBackup||Date.now()-Date.parse(lastBackup)>864e5;
@@ -427,7 +481,7 @@ V.home=()=>{
   const coll=S.parties.filter(p=>p.type==='customer').reduce((a,p)=>a+Math.max(0,balance(p)),0);
   const pay=S.parties.filter(p=>p.type==='supplier').reduce((a,p)=>a+Math.max(0,balance(p)),0);
   const ex=billingOnly()?[]:expiryList(),low=billingOnly()?[]:lowStock(),recent=[...S.sales].reverse().slice(0,6);
-  const needBk=!S.sample&&backupState!=='on'&&(!lastBackup||Date.now()-Date.parse(lastBackup)>864e5);
+  const needBk=!CLOUD&&!S.sample&&backupState!=='on'&&(!lastBackup||Date.now()-Date.parse(lastBackup)>864e5);
   const tile=(k,v,s,cls,go,tab)=>`<button class="tile ${cls}" data-go="${go}" ${tab?`data-tab="${tab}"`:''}><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></button>`;
   return`${needBk?`<div class="banner"><span><b>Your records were not backed up today.</b> If this computer's browser data is cleared, unsaved records are lost.</span><span class="row"><button class="btn sm pri" data-act="backup">Download backup</button><button class="btn sm" data-go="settings">Set up auto backup</button></span></div>`:''}
   ${checklist()}
@@ -451,7 +505,7 @@ V.home=()=>{
 /* ================= NEW BILL ================= */
 function checklist(){
   if(S.sample)return'';const st=S.settings;
-  const steps=[[st.setupDone,'Set up shop name, GST type and printer','setup','Set up'],...(billingOnly()?[]:[[S.batches.some(b=>b.qty>0),'Add your stock: import your Excel stock list, or enter purchases','meds','Import stock']]),[S.sales.length>0,'Make your first bill','bill','New bill'],[!!lastBackup||backupState==='on','Set up backup so you never lose records','settings','Backup']];
+  const steps=[[st.setupDone,'Set up shop name, GST type and printer','setup','Set up'],...(billingOnly()?[]:[[S.batches.some(b=>b.qty>0),'Add your stock: import your Excel stock list, or enter purchases','meds','Import stock']]),[S.sales.length>0,'Make your first bill','bill','New bill'],[CLOUD||!!lastBackup||backupState==='on','Set up backup so you never lose records','settings','Backup']];
   if(steps.every(x=>x[0]))return'';
   return`<section class="card stack" style="margin-bottom:16px"><h3 style="margin:0">Get started: ${steps.filter(x=>x[0]).length} of ${steps.length} done</h3><div class="check">${steps.map(([d,t,g,b],i)=>`<div class="ck ${d?'done':''}"><i>${d?'✓':i+1}</i><span>${t}</span>${d?'':`<button class="btn sm pri" data-go="${g}">${b}</button>`}</div>`).join('')}</div></section>`;
 }
@@ -977,8 +1031,8 @@ V.settings=()=>{const s=S.settings,used=maxBillNo(s.prefix);return`<div class="h
 AFTER.settings=()=>{
   $('#restore').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.meds||!d.sales)throw 0;S=d;migrate();logEv('Data restored from backup file '+f.name);save();render();toast('Backup restored.')}catch(x){toast('That file is not a Pharmacy Counter backup.')}};r.readAsText(f)});
   (async()=>{const el=$('#snaps');if(!el)return;if(!idb){el.textContent='Not available in this browser.';return}
-    try{const keys=(await idbKeys()).map(String).filter(k=>k.startsWith('snap-')).sort().reverse();
-      el.innerHTML=keys.length?`<div class="tw"><table class="t"><tbody>${keys.map(k=>`<tr><td>Start of ${dmy(k.slice(5))}</td><td class="r"><button class="btn sm" data-act="restoreSnap" data-k="${k}">Restore this day</button></td></tr>`).join('')}</tbody></table></div>`:'No daily copies yet.'}catch(e){el.textContent='Could not read daily copies.'}})();
+    try{const keys=(await idbKeys()).map(String).filter(k=>k.startsWith(SNAP)).sort().reverse();
+      el.innerHTML=keys.length?`<div class="tw"><table class="t"><tbody>${keys.map(k=>`<tr><td>Start of ${dmy(k.slice(-10))}</td><td class="r"><button class="btn sm" data-act="restoreSnap" data-k="${k}">Restore this day</button></td></tr>`).join('')}</tbody></table></div>`:'No daily copies yet.'}catch(e){el.textContent='Could not read daily copies.'}})();
 };
 
 /* ================= BILL PRINT ================= */
@@ -1037,6 +1091,11 @@ function returnFormHTML(s){
 
 /* ================= actions ================= */
 const A={
+  syncNow:()=>cloudSync(true),
+  logout:async b=>{
+    if(S.sync&&S.sync.dirty){await cloudSync(true);if(S.sync.dirty&&!armed(b)){toast('Some changes are not in the cloud yet. They stay on this computer. Click Log out again to continue.');return}}
+    await PCCloud.signOut();location.replace('../login.html');
+  },
   close:()=>{closeModal();if(view==='bill')$('#medsearch')?.focus()},
   importForm:()=>{IMP=null;modal(importFormHTML(),true);$('#impfile').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadImportFile(f)})},
   impTemplate:()=>{const csv='Medicine name,Batch,Expiry,Quantity,MRP,Purchase rate,GST %,HSN,Company,Pack\nDOLO 650 TABLET,DOBS4521,03/2028,40,30.91,20.40,5,3004,Micro Labs,15 TAB\nPAN 40 TABLET,PN2408,07/2028,12,183,118,5,3004,Alkem,15 TAB\n';
@@ -1137,7 +1196,7 @@ const A={
     try{dirHandle=await window.showDirectoryPicker({mode:'readwrite'});if(idb)await idbSet('dir',dirHandle);await writeBackupFile();backupState='on';logEv('Auto backup folder set: '+dirHandle.name);save();render();toast(`Auto backup is on. Files are saved in “${dirHandle.name}”.`)}
     catch(e){if(e&&e.name!=='AbortError')toast('Could not use that folder. Try another folder, or use Download backup.')}},
   resumeBackup:async()=>{try{const p=await dirHandle.requestPermission({mode:'readwrite'});if(p==='granted'){await writeBackupFile();backupState='on';toast('Auto backup resumed.')}else toast('Backup stays paused until you allow it.')}catch(e){toast('Could not reach the backup folder. Choose it again in Settings.')}drawNav()},
-  restoreSnap:async b=>{if(!armed(b))return;try{const d=await idbGet(b.dataset.k);if(!d)throw 0;S=d;migrate();logEv('Restored daily copy from '+dmy(b.dataset.k.slice(5)));save();render();toast('Records restored to the start of '+dmy(b.dataset.k.slice(5))+'.')}catch(e){toast('Could not restore that copy.')}},
+  restoreSnap:async b=>{if(!armed(b))return;try{const d=await idbGet(b.dataset.k);if(!d)throw 0;S=d;migrate();logEv('Restored daily copy from '+dmy(b.dataset.k.slice(-10)));save();render();toast('Records restored to the start of '+dmy(b.dataset.k.slice(-10))+'.')}catch(e){toast('Could not restore that copy.')}},
   wipe:b=>{if(!armed(b))return;const st=S.settings;S=blankState();S.settings=st;S.settings.nextNo=1;S.settings.cnNo=1;logEv('All data deleted');save();render();toast('All data deleted.')},
   clearSample:b=>{if(!armed(b))return;const st=S.settings;S=blankState();S.settings={...st,nextNo:1,cnNo:1,welcomed:true};logEv('Sample data removed');save();go(st.setupDone?'home':'setup');toast('Sample data removed. Add your medicines or enter a purchase to begin.')},
 };
@@ -1160,17 +1219,40 @@ document.addEventListener('keydown',e=>{
 /* ================= start ================= */
 (async function init(){
   try{idb=await idbOpen()}catch(e){idb=null}
-  let d=null;
-  if(idb){try{d=await idbGet('state');lastBackup=(await idbGet('lastBackup'))||null;dirHandle=(await idbGet('dir'))||null}catch(e){}}
-  let migrated=false;
-  if(!d){try{const v=localStorage.getItem(LEGACY_KEY);if(v){d=JSON.parse(v);migrated=true}}catch(e){}}
-  if(d&&d.meds){S=d;migrate();if(migrated)logEv('Records moved to the new storage')}else seed();
+  let d=null,migrated=false,fresh=false;
+  if(CLOUD){
+    const sess=PCCloud.session();
+    if(!sess||!sess.user){location.replace('../login.html?next=app');return}
+    const u=sess.user;STATE_KEY='state:'+u.id;SNAP=u.id+':snap-';
+    if(idb){try{d=await idbGet(STATE_KEY);lastBackup=(await idbGet(STATE_KEY+':lastBackup'))||null;dirHandle=(await idbGet('dir'))||null}catch(e){}}
+    let remote=null,online=true;
+    try{remote=await PCCloud.getShopData()}catch(e){online=false;if(e.status===401)cloudStatus={state:'login',msg:'Please log in again to keep saving to the cloud.'}}
+    if(remote&&remote.data&&remote.data.meds){
+      if(!d)d=Object.assign(remote.data,{sync:{at:remote.updated_at,dirty:false}});
+      else if(!d.sync||!d.sync.at||Date.parse(remote.updated_at)>Date.parse(d.sync.at)){
+        const merged=d.sync&&d.sync.dirty?mergeStates(d,remote.data):remote.data;d=Object.assign(merged,{sync:{...(d.sync||{}),at:remote.updated_at,dirty:!!(d.sync&&d.sync.dirty)}})}
+    }else if(!d&&online&&idb){
+      // first login on this device: bring over records made before accounts existed
+      try{const old=await idbGet('state');if(old&&old.meds&&!old.sample){d=old;d.sync={dirty:true};migrated=true}}catch(e){}
+    }
+    if(!d){fresh=true;S=blankState();const m=u.user_metadata||{};S.settings.shop=m.shop_name||S.settings.shop;if(m.phone)S.settings.phone=m.phone;
+      if(m.city)S.settings.addr=m.city;S.settings.welcomed=true;S.sync={dirty:true};logEv('Account created')}
+    else{S=d;migrate();if(migrated)logEv('Records from this computer added to your account')}
+    if(!online&&cloudStatus.state!=='login')cloudStatus={state:'offline',msg:''};
+  }else{
+    if(idb){try{d=await idbGet('state');lastBackup=(await idbGet('lastBackup'))||null;dirHandle=(await idbGet('dir'))||null}catch(e){}}
+    if(!d){try{const v=localStorage.getItem(LEGACY_KEY);if(v){d=JSON.parse(v);migrated=true}}catch(e){}}
+    if(d&&d.meds){S=d;migrate();if(migrated)logEv('Records moved to the new storage')}else seed();
+  }
+  if(fresh)view='setup';
   if(dirHandle)backupState='paused';
   save();
   try{await snapshotToday()}catch(e){}
   render();
   if(S.sample&&!S.settings.welcomed)modal(`<h2>Welcome to Pharmacy Counter</h2><p class="note">Free billing, stock and udhaar for your medical shop.</p><div class="welcome"><button data-act="startOwn"><b>Start with my shop</b><span class="note">Set up your shop name, GST and printer, then add stock.</span></button><button data-act="trySample"><b>Look around first</b><span class="note">Try it with sample medicines and bills. Remove them anytime.</span></button></div>`);
   if(dirHandle)autoBackup();
+  if(CLOUD)setTimeout(()=>cloudSync(!!(S.sync&&S.sync.dirty)),1500);
+  if(migrated&&CLOUD)toast('Records from this computer were added to your account.');
   setTimeout(loadCatalog,800);
 })();
 </script>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex">
+<title>Admin · Pharmacy Counter</title>
+<link rel="icon" href="assets/icon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="admin">
+<header class="top" id="top"></header>
+<main>
+<section style="padding-top:30px">
+  <div class="wrap" style="display:grid;gap:20px">
+    <div class="row" style="justify-content:space-between"><div><h1 style="font-size:32px">Shops using Pharmacy Counter</h1><p class="muted" id="who"></p></div>
+      <div class="row"><button class="btn sm" id="csv" hidden>Download CSV</button><button class="btn sm" id="reload" hidden>Refresh</button><button class="btn sm" id="out" hidden>Log out</button></div></div>
+    <div id="msg" class="msg info" hidden></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="row" id="filters" hidden><input id="q" placeholder="Search shop, email, phone or city" style="max-width:340px" aria-label="Search shops">
+      <select id="f" style="max-width:220px" aria-label="Filter"><option value="all">All shops</option><option value="active">Active in last 7 days</option><option value="idle">Not seen for 7+ days</option><option value="pro">Pro</option></select></div>
+    <div class="tw card" style="padding:0" id="tablewrap" hidden><table class="t" id="tbl"></table></div>
+    <p class="small muted" id="note" hidden>You see each shop's details and usage counts only. Bills, stock and patient records stay private to each shop.</p>
+  </div>
+</section>
+</main>
+<script src="assets/config.js"></script>
+<script src="assets/cloud.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const msg = (t, k) => { const m = $('#msg'); m.hidden = !t; m.textContent = t || ''; m.className = 'msg ' + (k || 'info'); };
+  if (!PCCloud.enabled()) return msg('Accounts are not switched on yet. Add your Supabase keys to assets/config.js (see SETUP.md).');
+  if (!PCCloud.session()) { location.replace('login.html?next=admin'); return; }
+  $('#who').textContent = 'Logged in as ' + (PCCloud.user() || {}).email;
+  $('#out').hidden = false; $('#out').onclick = async () => { await PCCloud.signOut(); location.replace('login.html?next=admin'); };
+  let rows = [];
+  const day = 864e5, now = Date.now();
+  const ago = t => { if (!t) return '<span class="chip dim">never</span>'; const d = Math.floor((now - Date.parse(t)) / day);
+    return d <= 0 ? '<span class="chip">today</span>' : d === 1 ? 'yesterday' : d < 7 ? d + ' days ago' : `<span class="chip warn">${d} days ago</span>`; };
+  const dmy = t => t ? new Date(t).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+  function draw() {
+    const q = $('#q').value.trim().toLowerCase(), f = $('#f').value;
+    const list = rows.filter(r => (!q || [r.shop_name, r.email, r.phone, r.city].join(' ').toLowerCase().includes(q))
+      && (f === 'all' || (f === 'active' && r.last_seen && now - Date.parse(r.last_seen) < 7 * day)
+        || (f === 'idle' && (!r.last_seen || now - Date.parse(r.last_seen) >= 7 * day)) || (f === 'pro' && r.plan === 'pro')));
+    const act = rows.filter(r => r.last_seen && now - Date.parse(r.last_seen) < 7 * day).length;
+    $('#tiles').innerHTML = [['Shops signed up', rows.length], ['Active in last 7 days', act], ['New this week', rows.filter(r => now - Date.parse(r.created_at) < 7 * day).length],
+      ['Bills made (all shops)', rows.reduce((a, r) => a + (r.bills_count || 0), 0).toLocaleString('en-IN')], ['On Pro', rows.filter(r => r.plan === 'pro').length]]
+      .map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+    $('#tbl').innerHTML = `<thead><tr><th>Shop</th><th>Contact</th><th>City</th><th>Joined</th><th>Last used</th><th class="r">Bills</th><th class="r">Medicines</th><th>Plan</th></tr></thead><tbody>${
+      list.map(r => `<tr><td><b>${esc(r.shop_name || '—')}</b></td><td>${esc(r.email)}<br><span class="small muted">${r.phone ? `<a href="https://wa.me/91${esc(r.phone.replace(/\D/g, '').slice(-10))}" target="_blank" rel="noopener">${esc(r.phone)}</a>` : ''}</span></td>
+        <td>${esc(r.city)}</td><td>${dmy(r.created_at)}</td><td>${ago(r.last_seen)}</td><td class="r">${r.bills_count || 0}</td><td class="r">${r.meds_count || 0}</td>
+        <td><select data-id="${r.id}" aria-label="Plan for ${esc(r.shop_name)}"><option value="free" ${r.plan === 'free' ? 'selected' : ''}>Free</option><option value="pro" ${r.plan === 'pro' ? 'selected' : ''}>Pro</option></select></td></tr>`).join('')
+      || '<tr><td colspan="8" class="muted" style="text-align:center;padding:30px">No shops match.</td></tr>'}</tbody>`;
+  }
+  async function load() {
+    try { rows = await PCCloud.listProfiles() || []; msg(''); draw(); }
+    catch (e) { msg(e.message, 'err'); }
+  }
+  try {
+    if (!(await PCCloud.isAdmin())) return msg('This account is not an admin. Add your email to the admins table in Supabase (see SETUP.md, step 6).', 'err');
+  } catch (e) { return msg(e.message, 'err'); }
+  ['#csv', '#reload', '#filters', '#tablewrap', '#note'].forEach(s => $(s).hidden = false);
+  $('#q').oninput = draw; $('#f').onchange = draw; $('#reload').onclick = load;
+  $('#tbl').addEventListener('change', async e => {
+    const s = e.target.closest('select[data-id]'); if (!s) return;
+    try { await PCCloud.setPlan(s.dataset.id, s.value); const r = rows.find(x => x.id === s.dataset.id); if (r) r.plan = s.value; msg('Plan updated.', 'ok'); draw(); }
+    catch (err) { msg(err.message, 'err'); load(); }
+  });
+  $('#csv').onclick = () => {
+    const cols = ['shop_name', 'email', 'phone', 'city', 'plan', 'created_at', 'last_seen', 'bills_count', 'meds_count'];
+    const csv = [cols.join(',')].concat(rows.map(r => cols.map(c => '"' + String(r[c] ?? '').replace(/"/g, '""') + '"').join(','))).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'pharmacy-counter-shops.csv'; a.click();
+  };
+  load();
+})();
+</script>
+</body>
+</html>
